@@ -3,8 +3,8 @@
 Faire un programme qui récupère les informations d'un fichier SAM.
 
 ## Contraintes
-Input: fichier .sam
-Output: fichier .txt
+- Input: fichier .sam
+- Output: fichier .txt
 
 ## Comment sera structuré le programme ?
 
@@ -17,6 +17,8 @@ Output: fichier .txt
 - Module Flag
 
 - Module Cigar
+
+- 
 
 
 
