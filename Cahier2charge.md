@@ -1,9 +1,14 @@
-Objectifs :
+# Objectifs :
 
 Faire un programme qui récupère les informations d'un fichier SAM.
 
+## Contraintes
+Input: fichier .sam
+Output: fichier .txt
 
-Fichier en entrée : .sam
+## Comment sera structuré le programme ?
+
+
 
 - Parser le fichier : module ouverture fichier
 	- récupérer header
@@ -14,7 +19,4 @@ Fichier en entrée : .sam
 - Module Cigar
 
 
-
-
-????
 
