@@ -60,7 +60,6 @@ def openSam(argv):
     """
     with open(argv, "r") as sam_file:
         for line in sam_file:
-            #print(line)
             if line.startswith("@"):
                 sam_header = line.strip()
                 print(sam_header)
@@ -74,6 +73,12 @@ def parseFlag():
     pass
 
 def parseCigar():
+    """
+    Docstring
+    """
+    pass
+
+def parseMAPQ():
     """
     Docstring
     """
