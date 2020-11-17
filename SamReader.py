@@ -18,13 +18,6 @@ argument 2: output table
 __authors__ = ("Benoit Aliaga", "Matthieu Angles")
 __contact__ = ("aliaga.benoit@gmail.com", "matthieu.angles@hotmail.fr")
 __version__ = "0.0.1"
-<<<<<<< HEAD
-__date__ = "11/11/2020"
-
-import sys, re
-
-def main():
-=======
 __date__ = "11/14/2020"
 
 import sys, re, getopt
@@ -74,16 +67,11 @@ def openSam(argv):
                 print(line)
 
 def parseFlag():
->>>>>>> Benoit
     """
     Docstring
     """
     pass
 
-<<<<<<< HEAD
-if __name__ == "__main__":
-    main()
-=======
 def parseCigar():
     """
     Docstring
@@ -121,8 +109,6 @@ def main(argv):
         print (str(err))
         usage()
         sys.exit(2)
-
         
 if __name__ == "__main__":
     main(sys.argv[1:])
->>>>>>> Benoit
