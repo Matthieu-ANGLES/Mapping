@@ -8,14 +8,10 @@ pyScriptName = sys.argv[0]
 samFileName = sys.argv[1]
 samOutputName = sys.argv[2]
 
+# Fonctions readCigar : Make a distionary (key=Op, value=nb)
+
 def readCigar (cigar):
-#cigar = input(str("Entrer une valeur de cigar :"))
-# exemple cigar 3M1I3M1D5M
-# autre exemple 312M41I38M1D669M
-
     ext = re.findall('\w',cigar) # re fonction, donne une liste chaque éléments individualisés
-    #print (ext)
-
     value=[]
     key=[]
     val=""
@@ -31,7 +27,7 @@ def readCigar (cigar):
     
     dico={}
     n=0
-    for k in key:
+    for k in key:                   
         if k not in dico.keys():
             dico[k]=value[n]
             n+=1
@@ -40,8 +36,34 @@ def readCigar (cigar):
             n+=1
     return (dico)
   
+# Fonctions readCigar : Tanslate into string a distionary
+def textCigar (dico):
+    res=""
+    for i in dico.keys():
+        #print(i)
+        if i == 'M':
+            res += " Alignment mapped "+dico[i]
+        elif i=='D':
+            res += " Deletion(s) "+dico[i]
+        elif i=='I':
+            res += " Insertion(s) "+dico[i]
+        elif i=='S':
+            res += " Soft clipping "+dico[i]
+        elif i=='H':
+            res += " Hard clipping "+dico[i]
+        elif i=='=':
+            res += " Sequence match "+dico[i]
+        elif i=='X':
+            res += " Sequence mismatch "+dico[i]
+        elif i=='N':
+            res += " skipped region "+dico[i]
+        elif i=='P':
+            res += " Padding (silent del) "+dico[i]
 
-# Parsing fichier SAM génère un fichier txt en sortie (nomRead;cigarR1;cigarR2)
+    return(res)
+
+
+# Parsing SAM File (print Header and write ReadNames, cigar R1, R2 and text on output file)
 
 with open(samFileName, "r") as sam_file, open(samOutputName, "w") as output_sam_cigar:
     cpt = 1 # Initialisation d'un compteur
@@ -59,12 +81,9 @@ with open(samFileName, "r") as sam_file, open(samOutputName, "w") as output_sam_
             elif cpt == 2:
                 add_line.append(cigar[5]) # ajout de cigar2
                 new_line = " \t ".join([add_line[0], add_line[1], add_line[2]])
-                print(new_line)
+                #print(new_line)
                 c1=readCigar(add_line[1])
                 c2=readCigar(add_line[2])
-                print(c1)
-                print(c2)
-                output_sam_cigar.write(add_line[0] + ";" + add_line[1] + ";" + add_line[2] 
-                        +str(c1) + str(c2)+"\n") #+ c1 + c2+
+                output_sam_cigar.write(add_line[0] + ";" + add_line[1] + ";" + textCigar(c1) + ";" 
+                        + add_line[2] + ";" + textCigar(c2) + ";" + "\n") #str(c1) + str(c2)+
                 cpt = 1
-
