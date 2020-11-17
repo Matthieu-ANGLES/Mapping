@@ -31,20 +31,21 @@ print (value)   # = [3, ...]
 #for i in range (0, len(key)):
     #print (value[i],key[i])
 
-dico={k:v for k,v in zip(key,value)}
+dico2={k:v for k,v in zip(key,value)}
 
-print(len(key))
-dico2={}
+dico={}
 n=0
-for i in key:
-    if i not in dico2.keys():
-        dico2[key[i]]=value[n]
+for k in key:
+    if k not in dico.keys():
+        print(k)
+        dico[k]=value[n]
+        n+=1
     else:
-        dico2[key[i]]+=value[n]
-n=+1
+        print(k)
+        dico[k]+=value[n]
+        n+=1
 
 
 print (dico)
 print (dico2)
-
 
