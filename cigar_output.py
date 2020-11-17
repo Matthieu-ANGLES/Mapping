@@ -8,7 +8,6 @@ cigar = input(str("Entrer une valeur de cigar :"))
 # autre exemple 312M41I38M1D669M
 
 ext = re.findall('\w',cigar) # re fonction, donne une liste chaque éléments individualisés
-#print (ext)
 
 value=[]
 key=[]
@@ -23,15 +22,10 @@ for i in range (0,len(ext)) :
     else :
         val=""+val+ext[i]
 
-value = [int(i) for i in value]
+value = [int(i) for i in value] # transforme la liste en liste d'entiers
 
-print (key)     # = ['M',...]
-print (value)   # = [3, ...]
-
-#for i in range (0, len(key)):
-    #print (value[i],key[i])
-
-dico2={k:v for k,v in zip(key,value)}
+#print (key)
+#print (value)
 
 dico={}
 n=0
@@ -45,7 +39,5 @@ for k in key:
         dico[k]+=value[n]
         n+=1
 
-
 print (dico)
 print (dico2)
-
