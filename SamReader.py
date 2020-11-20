@@ -18,16 +18,10 @@ argument 2: output table
 __authors__ = ("Benoit Aliaga", "Matthieu Angles")
 __contact__ = ("aliaga.benoit@gmail.com", "matthieu.angles@hotmail.fr")
 __version__ = "0.0.1"
-<<<<<<< HEAD
-__date__ = "11/11/2020"
-
-import sys, re
-
-def main():
-=======
 __date__ = "11/14/2020"
 
-import sys, re, getopt
+import os, sys, re, getopt
+from FlagDescription import FLAG
 
 def usage():
     sys.stderr.write('''
@@ -39,7 +33,7 @@ def usage():
          0.0.1
 
     FUNCTION: 
-         SamReader is a parser program for samtool files (.sam). 
+         SamReader is a parser program for samtools files (.sam). 
 
     OPTION LIST:
          -h or --help : help information
@@ -65,25 +59,63 @@ def openSam(argv):
     """
     Read a sam file. 
     """
+
+    sam_header = []
+    sam_line = []
+    
     with open(argv, "r") as sam_file:
         for line in sam_file:
             if line.startswith("@"):
-                sam_header = line.strip()
-                print(sam_header)
+                header_line = line.strip()
+                sam_header.append(header_line)
             else:
-                print(line)
-
-def parseFlag():
->>>>>>> Benoit
+                #print("Line en cours")
+                sam_line.append(line)
+        return sam_line
+            
+def outFile(argv):
+    """
+    Output file name
+    """
+    os.remove("table_flag.txt")
+    os.rename("Final_Flag_table.txt", argv)
+    
+def parseFlag(sam_line):
     """
     Docstring
     """
-    pass
+    cpt = 1 # Initialisation d'un compteur
+    with open("table_flag.txt", "w") as output_sam_flag:
+        for line in sam_line:
+            flag = line.split("\t") # Fractionnement de la line suivant \t
+            if cpt == 1:
+                add_line = [flag[0], flag[1]]
+                #print(add_line)
+                cpt +=1
+            elif cpt == 2:
+                add_line.append(flag[1]) # ajout de flag2
+                new_line = " \t ".join([add_line[0], add_line[1], add_line[2]])
+                #print(new_line)
+                output_sam_flag.write(add_line[0] + ";" + add_line[1] + ";" + add_line[2] + "\n")
+                cpt = 1
 
-<<<<<<< HEAD
-if __name__ == "__main__":
-    main()
-=======
+def countFlag():
+    """
+    Docstring
+    """
+    with open("table_flag.txt", "r") as table_flag, open("Final_Flag_table.txt", "w") as output_flag:
+        dico = {}
+        for line in table_flag:
+            flag = line.rstrip("\n").rsplit(";")
+            inter = flag[1] + "-" + flag[2]
+            if inter not in dico.keys():
+                dico[inter] = 1
+            else:
+                dico[inter] += 1
+            #print(dico)
+        for key in dico.keys():
+            output_flag.write(key + ";" + str(dico[key]) + "\n")
+
 def parseCigar():
     """
     Docstring
@@ -111,18 +143,19 @@ def main(argv):
         for current_argument, current_value in arguments:
             if current_argument in ("-h", "--help"):
                 usage()
-            elif current_argument in ("-i", "--input"):
+            if current_argument in ("-i", "--input"):
                 print("Read the file")
-                openSam(current_value)
-            elif current_argument in ("-o", "--output"):
+                resSam = openSam(current_value)
+                parseFlag(resSam)
+                countFlag()
+            if current_argument in ("-o", "--output"):
                 print("Ouput the file")
+                outFile(current_value)
     except getopt.error as err:
         # Output error, and return with an error code
         print (str(err))
         usage()
         sys.exit(2)
-
         
 if __name__ == "__main__":
     main(sys.argv[1:])
->>>>>>> Benoit
