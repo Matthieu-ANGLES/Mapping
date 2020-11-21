@@ -20,7 +20,7 @@ with open(samFileName, "r") as sam_file :
             print ("*********** Error SAM format ***********")
             stop=1
 
-# Parsing SAM File (print Header and split line in tuples)
+# Parsing SAM File (print Header and split line in list
 
 QNAME=[]
 FLAG=[]
