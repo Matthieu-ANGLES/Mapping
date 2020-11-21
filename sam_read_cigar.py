@@ -8,17 +8,16 @@ pyScriptName = sys.argv[0]
 samFileName = sys.argv[1]
 samOutputName = sys.argv[2]
 
-# Fonctions readCigar : Make a distionary (key=Op, value=nb)
-
-def readCigar (cigar):
-    ext = re.findall('\w',cigar) # re fonction, donne une liste chaque éléments individualisés
-    value=[]
-    key=[]
+# Functions readCigar : Make a distionary (key=mut, value=nb)
+def readCigar (cigar): # Make a directory with lists key, value
+    ext = re.findall('\w',cigar) # split cigar 
+    key=[]      # arg string in key list
+    value=[]    # arg int in value list
     val=""
 
     for i in range (0,len(ext)) :
-        if (ext[i]=='M' or ext[i]=='D' or ext[i]=='I' or ext[i]=='S' or ext[i]=='H' 
-                        or ext[i]=="=" or ext[i]=='X'or ext[i]=='N'or ext[i]=='P') :
+        if (ext[i]=='M' or ext[i]=='I' or ext[i]=='D' or ext[i]=='S' or ext[i]=='H' 
+                        or ext[i]=="N" or ext[i]=='P'or ext[i]=='X'or ext[i]=='=') :
             key.append(ext[i])
             value.append(val)
             val=""
@@ -27,63 +26,48 @@ def readCigar (cigar):
     
     dico={}
     n=0
-    for k in key:                   
-        if k not in dico.keys():
-            dico[k]=value[n]
+    for k in key:   # Dictionnary contruction in range size lists              
+        if k not in dico.keys():    # for each key, insert int value
+            dico[k]=int(value[n])   # if key not exist, create and add value
             n+=1
         else:
-            dico[k]+=value[n]
+            dico[k]+=int(value[n])  # inf key exist add value
             n+=1
     return (dico)
-  
-# Fonctions readCigar : Tanslate into string a distionary
-def textCigar (dico):
-    res=""
-    for i in dico.keys():
-        #print(i)
-        if i == 'M':
-            res += " Alignment mapped "+dico[i]
-        elif i=='D':
-            res += " Deletion(s) "+dico[i]
-        elif i=='I':
-            res += " Insertion(s) "+dico[i]
-        elif i=='S':
-            res += " Soft clipping "+dico[i]
-        elif i=='H':
-            res += " Hard clipping "+dico[i]
-        elif i=='=':
-            res += " Sequence match "+dico[i]
-        elif i=='X':
-            res += " Sequence mismatch "+dico[i]
-        elif i=='N':
-            res += " skipped region "+dico[i]
-        elif i=='P':
-            res += " Padding (silent del) "+dico[i]
 
-    return(res)
+# Functions readCigar : Give percentage for each mutation in readCigar dictionnary
+def percentMutation (dico):
 
+    totalValue = 0 # Calculated total mutation number
+    for v in dico :
+        totalValue += dico[v]
 
-# Parsing SAM File (print Header and write ReadNames, cigar R1, R2 and text on output file)
+    mutList = ['M','I','D','S','H','N','P','X','=']
+    res = ""
+    for mut in mutList : # Calculated percent of mutation if mut present in the dictionnary, else, percent of mut = 0
+        if mut in dico.keys() :
+            res += (mut+str(round((dico[mut]*100)/totalValue,2))+";")
+        else :
+            res += (mut+"0.00"+";")
+    return (res)
 
+# Parsing SAM File (print Header and write in output file ReadNames;cigarR1,percent of each R1 mutations;cigarR2,percent of each R2 mutations on output file)
 with open(samFileName, "r") as sam_file, open(samOutputName, "w") as output_sam_cigar:
-    cpt = 1 # Initialisation d'un compteur
+    cpt = 1 # Paired-and read counter
     for line in sam_file:
-        if line.startswith("@"): # A modifier
+        if line.startswith("@"):
             sam_header = line.strip()
             print(sam_header)
         else:
-            #cpt = 1 
-            cigar = line.split("\t") # Fractionnement de la line suivant \t
+            readLine = line.split("\t") # Split args line
             if cpt == 1:
-                add_line = [cigar[0], cigar[5]]
-                #print(add_line)
+                add_line = [readLine[0], readLine[5]] # Creation line with Read and cigar R1
                 cpt +=1
             elif cpt == 2:
-                add_line.append(cigar[5]) # ajout de cigar2
-                new_line = " \t ".join([add_line[0], add_line[1], add_line[2]])
-                #print(new_line)
+                add_line.append(readLine[5]) # Add cigar R2 into line
                 c1=readCigar(add_line[1])
                 c2=readCigar(add_line[2])
-                output_sam_cigar.write(add_line[0] + ";" + add_line[1] + ";" + textCigar(c1) + ";" 
-                        + add_line[2] + ";" + textCigar(c2) + ";" + "\n") #str(c1) + str(c2)+
+                output_sam_cigar.write(add_line[0] # Write in output file Read;cigarR1;percent all mutations represent;cigarR2;percent all mutations represent;
+                                    +";"+add_line[1]+";"+percentMutation(c1)
+                                    +add_line[2]+";"+percentMutation(c1)+"\n")
                 cpt = 1
