@@ -69,5 +69,5 @@ with open(samFileName, "r") as sam_file, open(samOutputName, "w") as output_sam_
                 c2=readCigar(add_line[2])
                 output_sam_cigar.write(add_line[0] # Write in output file Read;cigarR1;percent all mutations represent;cigarR2;percent all mutations represent;
                                     +";"+add_line[1]+";"+percentMutation(c1)
-                                    +add_line[2]+";"+percentMutation(c1)+"\n")
+                                    +add_line[2]+";"+percentMutation(c2)+"\n")
                 cpt = 1
