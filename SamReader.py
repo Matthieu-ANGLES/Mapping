@@ -138,27 +138,33 @@ def parseFlagCigar(superList):
     """
     Function which create a table with flag and cigar statistics.
     """
-    #print(keySam)
-   # print(superList)
-#    print(superList[1])
-    #print(superList([0][1]))
-    
-    cpt = 1 # Initialisation d'un compteur
-    with open("parse_flag_table.txt", "w") as output_sam_flag:
-        for ele in range(0, len(superList)):
-            print(superList[ele])
-            for i in range(len(superList[ele])):
-                print(superList[ele][i])
+    # Parsing SAM File (print Header and write in output file ReadNames;cigarR1,percent of each R1 mutations;cigarR2,percent of each R2 mutations on output file)
+    with open(sam_file, "r") as sam_file, open(samOutputName, "w") as output_sam_cigar:
+        cpt = 1 # Paired-and read counter
+        for line in sam_file:
+            if line.startswith("@"):
+                sam_header = line.strip()
+                print(sam_header)
+            else:
+                readLine = line.split("\t") # Split args line
                 if cpt == 1:
-                    add_line = superList[ele][i]
-                    print(add_line)
+                    add_line = [readLine[0],readLine[1],readLine[5]] # Creation line with Read and cigar R1
                     cpt +=1
-                #elif cpt == 2:
-                    #    add_line.append(i[2]) # ajout de flag2
-                    #    new_line = " \t ".join([add_line[1], add_line[2]])
-                    #    #print(new_line)
-                    #    output_sam_flag.write(add_line[0] + ";" + add_line[1] + ";" + add_line[2] + "\n")
-                    #    cpt = 1
+                elif cpt == 2:
+                    add_line.append(readLine[1]) # Add flag R2
+                    add_line.append(readLine[5]) # Add cigar R2 into line
+                    c1=readCigar(add_line[3])
+                    c2=readCigar(add_line[5])
+                    print (add_line)
+                    '''
+                    output_sam_cigar.write(add_line[0] # Write in output file Read;cigarR1;percent all mutations represent;cigarR2;percent all mutations represent;
+                                    +";"+add_line[1]+";"+percentMutation(c1)
+                                    +add_line[2]+";"+percentMutation(c2)+"\n")
+                    '''
+                    cpt = 1
+
+
+
 
 def countFlag():
     """
