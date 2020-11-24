@@ -45,23 +45,73 @@ def usage():
     ''')
     sys.exit(-1)
 
+def checkSam(sam_header):
+    """
+    docstring
+    """
+    pass
+
+
+
 def openSam(argv):
     """
     Read a sam file. 
     """
+    # Parsing SAM File (print Header and split line in list
 
-    sam_header = []
-    sam_line = []
-    
-    with open(argv, "r") as sam_file:
+    QNAME=[]
+    FLAG=[]
+    RNAME=[]
+    POS=[]
+    MAPQ=[]
+    CIGAR=[]
+    RNEXT=[]
+    PNEXT=[]
+    TLEN=[]
+    SEQ=[]
+    QUAL=[]
+
+    with open(argv, "r") as sam_file :
         for line in sam_file:
-            if line.startswith("@"):
-                header_line = line.strip()
-                sam_header.append(header_line)
+            #Check Sam format
+            #if stop == 1 :
+            #    break
+
+            if line.startswith("@"): # Header motif
+                # checkSam()
+                sam_header = line.strip()
+                print(sam_header)
+                # parse header
             else:
-                #print("Line en cours")
-                sam_line.append(line)
-        return sam_line
+                samLine = line.split("\t") # Fractionnement de la line suivant \t
+                QNAME.append(samLine[0])
+                FLAG.append(samLine[1])
+                RNAME.append(samLine[2])
+                POS.append(samLine[3])
+                MAPQ.append(samLine[4])
+                CIGAR.append(samLine[5])
+                RNEXT.append(samLine[6])
+                PNEXT.append(samLine[7])
+                TLEN.append(samLine[8])
+                SEQ.append(samLine[9])
+                QUAL.append(samLine[10])
+                
+    #print(FLAG)
+    #print(CIGAR)
+    #print (QNAME)
+    #print (QNAME[0])
+    keySam = {}
+    keyName = ("QNAME","FLAG","RNAME","POS","MAPQ","CIGAR",
+                "RNEXT","PNEXT","TLEN","SEQ","QUAL")
+
+    print (len(QNAME))
+    #for k in keyName:
+    #    for v in range (0,len(QNAME)):
+    #        keySam[k].append(k[v])
+
+    #print (keySam)
+
+
             
 def outFile(argv):
     """
@@ -159,16 +209,17 @@ def main(argv):
             if current_argument in ("-i", "--input"):
                 print("Read the file.")
                 resSam = openSam(current_value)
+                print (resSam)
 
                 print("Parse the flag.")
-                parseFlag(resSam)
+                #parseFlag(resSam)
 
                 print("Count the number of read for each flag combinations.")
-                countFlag()
+                #countFlag()
 
                 print("Calculate the percentage for each flag combination.")
-                numberReads = total()
-                percFlag(numberReads)
+                #numberReads = total()
+                #percFlag(numberReads)
                 
             if current_argument in ("-o", "--output"):
                 print("Ouput the file.")
@@ -184,3 +235,5 @@ def main(argv):
         
 if __name__ == "__main__":
     main(sys.argv[1:])
+
+
