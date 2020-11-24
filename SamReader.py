@@ -110,8 +110,6 @@ def openSam(argv):
     #        keySam[k].append(k[v])
 
     #print (keySam)
-
-
             
 def outFile(argv):
     """
