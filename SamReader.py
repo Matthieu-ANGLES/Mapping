@@ -95,21 +95,36 @@ def openSam(argv):
                 TLEN.append(samLine[8])
                 SEQ.append(samLine[9])
                 QUAL.append(samLine[10])
-                
-    #print(FLAG)
-    #print(CIGAR)
-    #print (QNAME)
-    #print (QNAME[0])
-    keySam = {}
-    keyName = ("QNAME","FLAG","RNAME","POS","MAPQ","CIGAR",
-                "RNEXT","PNEXT","TLEN","SEQ","QUAL")
 
-    print (len(QNAME))
-    #for k in keyName:
-    #    for v in range (0,len(QNAME)):
-    #        keySam[k].append(k[v])
 
-    #print (keySam)
+        superList = []
+        superList.append(QNAME)
+        superList.append(FLAG)
+        superList.append(RNAME)
+        superList.append(POS)
+        superList.append(MAPQ)
+        superList.append(CIGAR)
+        superList.append(RNEXT)
+        superList.append(PNEXT)
+        superList.append(TLEN)
+        superList.append(SEQ)
+        superList.append(QUAL)
+        #print(superList)
+    #keySam = {}
+    
+    #keySam["qname"] = QNAME
+    #keySam["flag"] = FLAG
+    #keySam["rname"] = RNAME
+    #keySam["pos"] = POS
+    #keySam["mapq"] = MAPQ
+    #keySam["cigar"] = CIGAR 
+    #keySam["rnext"] = RNEXT
+    #keySam["pnext"] = PNEXT
+    #keySam["tlen"] = TLEN
+    #keySam["seq"] = SEQ
+    #keySam["qual"] = QUAL
+
+    return superList
             
 def outFile(argv):
     """
@@ -119,24 +134,31 @@ def outFile(argv):
     os.remove("count_flag_table.txt")
     os.rename("Final_Flag_table.txt", argv)
     
-def parseFlag(sam_line):
+def parseFlagCigar(superList):
     """
-    Docstring
+    Function which create a table with flag and cigar statistics.
     """
+    #print(keySam)
+   # print(superList)
+#    print(superList[1])
+    #print(superList([0][1]))
+    
     cpt = 1 # Initialisation d'un compteur
     with open("parse_flag_table.txt", "w") as output_sam_flag:
-        for line in sam_line:
-            flag = line.split("\t") # Fractionnement de la line suivant \t
-            if cpt == 1:
-                add_line = [flag[0], flag[1]]
-                #print(add_line)
-                cpt +=1
-            elif cpt == 2:
-                add_line.append(flag[1]) # ajout de flag2
-                new_line = " \t ".join([add_line[0], add_line[1], add_line[2]])
-                #print(new_line)
-                output_sam_flag.write(add_line[0] + ";" + add_line[1] + ";" + add_line[2] + "\n")
-                cpt = 1
+        for ele in range(0, len(superList)):
+            print(superList[ele])
+            for i in range(len(superList[ele])):
+                print(superList[ele][i])
+                if cpt == 1:
+                    add_line = superList[ele][i]
+                    print(add_line)
+                    cpt +=1
+                #elif cpt == 2:
+                    #    add_line.append(i[2]) # ajout de flag2
+                    #    new_line = " \t ".join([add_line[1], add_line[2]])
+                    #    #print(new_line)
+                    #    output_sam_flag.write(add_line[0] + ";" + add_line[1] + ";" + add_line[2] + "\n")
+                    #    cpt = 1
 
 def countFlag():
     """
@@ -207,7 +229,7 @@ def main(argv):
             if current_argument in ("-i", "--input"):
                 print("Read the file.")
                 resSam = openSam(current_value)
-                print (resSam)
+                parseFlagCigar(resSam)
 
                 print("Parse the flag.")
                 #parseFlag(resSam)
