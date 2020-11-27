@@ -46,23 +46,88 @@ def usage():
     ''')
     sys.exit(-1)
 
+def openSamHeader(argv):
+    """
+    Read a sam file to give header
+    """
+    sam_header = []
+    with open(argv, "r") as sam_file, open("summary_header.txt", "w") as summary_header :
+        for line in sam_file:
+            if line.startswith("@"): # Header motif
+                header_line = line.strip()
+                sam_header.append(header_line)  
+            else:
+                break
+        
+        for line in sam_header:                
+            if line.startswith("@SQ"):
+                ligne = line.split("\t")
+                for elem in ligne :
+                    if elem.startswith("SN"):
+                        SN = elem[3:]
+                    if elem.startswith("LN"):
+                        LN = elem[3:]
+                    if elem.startswith("AS"):
+                        AS = elem[3:]
+                    if elem.startswith("M5"):
+                        M5 = elem[3:]
+                    if elem.startswith("SP"):
+                        SP = elem[3:]
+                    if elem.startswith("UR"):
+                        UR = elem[3:]
+
+            if line.startswith("@PG"):
+                ligne = line.split("\t")
+                for elem in ligne :
+                    if elem.startswith("ID"):
+                        ID = elem[3:]
+                    if elem.startswith("PN"):
+                        PN = elem[3:]
+                    if elem.startswith("VN"):
+                        VN = elem[3:]
+                    if elem.startswith("CL"):
+                        CL = elem[3:]
+            '''
+            if line.startswith("@RG"):   on fait aussi ?
+            if line.startswith("@CO"):
+            if line.startswith("@HD"):
+            '''
+
+        print ("======================= HEADER INFORMATIONS =======================")
+        print ("Reference sequence name :",SN)
+        print ("Reference sequence lenght :",LN)
+        print ("Programme record identifier :",ID)
+        print ("Programme name :",PN)
+        print ("Programme version :",VN)
+        print ("Command Line :",CL)
+        print ("===================================================================")
+
+        summary_header.write("======================= HEADER INFORMATIONS ======================="+"\n")    
+        summary_header.write("Reference sequence name : "+SN+"\n")
+        summary_header.write("Reference sequence lenght : "+LN+"\n")
+        summary_header.write("Programme record identifier : "+ID+"\n") 
+        summary_header.write("Programme name : "+PN+"\n")
+        summary_header.write("Programme version : "+VN+"\n")
+        summary_header.write("Command Line : "+CL+"\n")
+        summary_header.write("==================================================================="+"\n")
+
+
 def openSam(argv):
     """
-    Read a sam file.
+    Read a sam file to give reads
     """
 
     sam_header = []
     sam_line = []
     
-    with open(argv, "r") as sam_file:
+    with open(argv, "r") as sam_file, open("summary.txt", "w") as summary :
         for line in sam_file:
             if line.startswith("@"):
-                header_line = line.strip()
-                sam_header.append(header_line)
+               pass
             else:
                 sam_line.append(line)
         return sam_line
-            
+        
 def outFile(argv):
     """
     Output file name
@@ -278,6 +343,7 @@ def main(argv):
                 
             if current_argument in ("-i", "--input"):
                 print("Read the file.")
+                openSamHeader(current_value)
                 resSam = openSam(current_value)
 
                 print("Parse the flag.")
