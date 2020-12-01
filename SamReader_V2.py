@@ -93,23 +93,23 @@ def openSamHeader(argv):
             if line.startswith("@HD"):
             '''
 
-        print ("======================= HEADER INFORMATIONS =======================")
+        print ("======================= HEADER INFORMATION =======================")
         print ("Reference sequence name :",SN)
         print ("Reference sequence lenght :",LN)
         print ("Programme record identifier :",ID)
         print ("Programme name :",PN)
         print ("Programme version :",VN)
         print ("Command Line :",CL)
-        print ("===================================================================")
+        print ("==================================================================")
 
-        summary_header.write("======================= HEADER INFORMATIONS ======================="+"\n")    
+        summary_header.write("======================= HEADER INFORMATION ======================="+"\n")    
         summary_header.write("Reference sequence name : "+SN+"\n")
         summary_header.write("Reference sequence lenght : "+LN+"\n")
         summary_header.write("Programme record identifier : "+ID+"\n") 
         summary_header.write("Programme name : "+PN+"\n")
         summary_header.write("Programme version : "+VN+"\n")
         summary_header.write("Command Line : "+CL+"\n")
-        summary_header.write("==================================================================="+"\n")
+        summary_header.write("=================================================================="+"\n")
 
 
 def openSam(argv):
@@ -135,6 +135,7 @@ def outFile(argv):
     os.remove("parse_flag_table.txt")
     os.remove("count_flag_table.txt")
     os.rename("Final_Flag_table.txt", argv)
+
     
 def parseFlagCigar(sam_line):
     """
@@ -283,47 +284,51 @@ def fastaOutput(sam_line, toto):
     """
     Fasta output
     """
-    test1 = ('83','163','77','141')
+
     One_of_the_reads_is_unmapped = ('73','133','89','121','165','181','101','117','153','185','69','137')
     Both_reads_are_unmapped = ('77','141')
     Mapped_within_the_insert_size_and_in_correct_orientation = ('99','147','83','163')
     Mapped_within_the_insert_size_but_in_wrong_orientation = ('67','131','115','179')
     Mapped_uniquely_but_with_wrong_insert_size = ('81','161','97','145','65','129','113','177')
+    #test1 = ('83','163','77','141')
+
+#### voir pour expatrier les listes ci-dessus en lecture de flag binaire ####
     
+    if (toto == "oum"):  # One of reads is unmapped
+        Output1 = open("OneUnMapped.fasta", "w")
+    elif (toto == "bum"): # Both are unmapped
+        Output2 = open("BothUnMapped.fasta", "w")
+    elif (toto == "co"): # Correct orientation
+        Output3 = open("CorrectOrientation.fasta", "w")
+    elif (toto == "wo"): # Wrong orientation
+        Output4 = open("WrongOrientation.fasta", "w")
+    elif (toto == "wi"): # Wrong insert size
+        Output5 = open("WrongInsertSize.fasta", "w")
+    #elif (toto == "test"): # test
+    #    Output6 = open("test.fasta","w")        
+       
     for l in sam_line:
         line = l.split("\t")
         flag = str(line[1])
-        print (toStringOutput(l))
-        # Test de controle
-        if (toto == "oum"): # One of reads is unmapped
-            with open("OneUnMapped.fasta", "w") as Output1:
-                if (flag in One_of_the_reads_is_unmapped):                            Output1.write(toStringOutput(sam_line))
-
-        elif (toto == "bum"): # Both are unmapped
-            with open("BothUnMapped.fasta", "w") as Output2:
-                if (flag in Both_reads_are_unmapped):
-                    Output2.write(toStringOutput(l))
-
-        elif (toto == "co"): # Correct orientation
-            with open("CorrectOrientation.fasta", "w") as Output3:
-                if (flag in Mapped_within_the_insert_size_and_in_correct_orientation):
-                    Output3.write(toStringOutput(l))
-
-        elif (toto == "wo"): # Wrong orientation
-            with open("WrongOrientation.fasta", "w") as Output4:
-                if (flag in Mapped_within_the_insert_size_but_in_wrong_orientation):
-                    Output4.write(toStringOutput(l))
-                    
-        elif (toto == "wi"): # Wrong insert size
-            with open("WrongInsertSize.fasta", "w") as Output5:
-                if (flag in Mapped_uniquely_but_with_wrong_insert_size):
-                        Output5.write(toStringOutput(l))
-
-        elif (toto == "test"): # test
-            with open("test.fasta", "w") as Output6:
-                if (flag in test1):
-                    Output6.write(toStringOutput(l))
         
+        if (flag in One_of_the_reads_is_unmapped and toto == "oum"):                            
+            with open("OneUnMapped.fasta", "a"):    
+                Output1.write(toStringOutput(sam_line))
+        if (flag in Both_reads_are_unmapped and toto == "bum"):
+            with open("BothUnMapped.fasta", "a"):
+                Output2.write(toStringOutput(l))
+        if (flag in Mapped_within_the_insert_size_and_in_correct_orientation and toto == "co"):
+            with open("CorrectOrientation.fasta", "a"):
+                Output3.write(toStringOutput(l))
+        if (flag in Mapped_within_the_insert_size_but_in_wrong_orientation and toto == "wo"):
+            with open("WrongOrientation.fasta", "a"):
+               Output4.write(toStringOutput(l))
+        if (flag in Mapped_uniquely_but_with_wrong_insert_size and toto == "wi"):
+            with open("WrongInsertSize.fasta", "a"):
+                Output5.write(toStringOutput(l))
+        #if (flag in test1 and toto == "test"):
+        #    with open("test.fasta", "a"):
+        #        Output6.write(toStringOutput(l))
 
 def main(argv):
     """
