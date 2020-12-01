@@ -290,45 +290,32 @@ def fastaOutput(sam_line, toto):
     Mapped_within_the_insert_size_and_in_correct_orientation = ('99','147','83','163')
     Mapped_within_the_insert_size_but_in_wrong_orientation = ('67','131','115','179')
     Mapped_uniquely_but_with_wrong_insert_size = ('81','161','97','145','65','129','113','177')
-    #test1 = ('83','163','77','141')
+    test1 = ('83','163','77','141')
 
 #### voir pour expatrier les listes ci-dessus en lecture de flag binaire ####
-    
-    if (toto == "oum"):  # One of reads is unmapped
-        Output1 = open("OneUnMapped.fasta", "w")
-    elif (toto == "bum"): # Both are unmapped
-        Output2 = open("BothUnMapped.fasta", "w")
-    elif (toto == "co"): # Correct orientation
-        Output3 = open("CorrectOrientation.fasta", "w")
-    elif (toto == "wo"): # Wrong orientation
-        Output4 = open("WrongOrientation.fasta", "w")
-    elif (toto == "wi"): # Wrong insert size
-        Output5 = open("WrongInsertSize.fasta", "w")
-    #elif (toto == "test"): # test
-    #    Output6 = open("test.fasta","w")        
-       
+
     for l in sam_line:
         line = l.split("\t")
         flag = str(line[1])
         
         if (flag in One_of_the_reads_is_unmapped and toto == "oum"):                            
-            with open("OneUnMapped.fasta", "a"):    
-                Output1.write(toStringOutput(sam_line))
+            with open("OneUnMapped.fasta", "a+") as Output1:    
+                Output1.write(toStringOutput(l))
         if (flag in Both_reads_are_unmapped and toto == "bum"):
-            with open("BothUnMapped.fasta", "a"):
+            with open("BothUnMapped.fasta", "a+") as Output2:
                 Output2.write(toStringOutput(l))
         if (flag in Mapped_within_the_insert_size_and_in_correct_orientation and toto == "co"):
-            with open("CorrectOrientation.fasta", "a"):
+            with open("CorrectOrientation.fasta", "a+") as Output3:
                 Output3.write(toStringOutput(l))
         if (flag in Mapped_within_the_insert_size_but_in_wrong_orientation and toto == "wo"):
-            with open("WrongOrientation.fasta", "a"):
+            with open("WrongOrientation.fasta", "a+") as Output4:
                Output4.write(toStringOutput(l))
         if (flag in Mapped_uniquely_but_with_wrong_insert_size and toto == "wi"):
-            with open("WrongInsertSize.fasta", "a"):
+            with open("WrongInsertSize.fasta", "a+") as Output5:
                 Output5.write(toStringOutput(l))
-        #if (flag in test1 and toto == "test"):
-        #    with open("test.fasta", "a"):
-        #        Output6.write(toStringOutput(l))
+        if (flag in test1 and toto == "test"):
+            with open("test.fasta", "a") as Output6:
+                Output6.write(toStringOutput(l))
 
 def main(argv):
     """
