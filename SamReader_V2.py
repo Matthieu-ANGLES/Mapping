@@ -274,15 +274,78 @@ def parseMAPQ():
     pass
 
 def toStringOutput (sam_line):
+    """
+    Write function for output
+    """
     line = sam_line.split("\t")
     qname = str(line[0])
     flag = str(line[1])
     seq = str(line[9])
     return ("> " + qname + " / flag:"+flag+"\n"+seq+"\n"+"\n")
 
+def flagBin (sam_line, toto): # VOIR POUR ECRITURE DANS SUMMARY OU AUTRE UTILISATION
+    """
+    Provides binary translation of the Flag
+    Fasta outputs options for Read Unmapped or others informations
+    """
+    for l in sam_line:          
+        line = l.split("\t") 
+        flag = str(line[1])  # Line Flag retrieval
+
+        te = bin(int(flag)) #### entre 0 et 4095 => mettre une securite !!!!!!
+        te = te[2:] # Cleaning regex '0b'  >'0b1001101'
+        te = list(te) 
+
+        if len(te) < 12: # size ajustement to 12 (normalyzed size)
+            add = 12 - len(te) 
+            for t in range(add):
+                te.insert(0,'0')
+
+        # Flag traduction
+        if 1 == int(te[-1]): # "Read paired"
+            pass
+
+        if 1 == int(te[-2]): # "Read mapped in proper pair"
+            pass
+            # faire un comptage ici ??
+
+        if (1 == int(te[-3]) and toto == "umo"): # "Read unmapped"
+            with open ("Reads_unmapped_only.txt","a+") as outputUMO:
+                outputUMO.write(toStringOutput(l))
+                # faire un comptage ici ??
+                
+        if 1 == int(te[-4]): # "Mate unmapped"
+            pass
+                
+        if 1 == int(te[-5]): # "Read reverse strand"
+            pass
+                
+        if 1 == int(te[-6]): # "Mate reverse strand"
+            pass
+                
+        if 1 == int(te[-7]): # "First in pair"
+            pass
+                
+        if 1 == int(te[-8]): # "Second in pair"
+            pass
+
+        if 1 == int(te[-9]): # "Not primary alignment"
+            pass
+                
+        if 1 == int(te[-10]): # "Read fails platform/vendor quality checks"
+            pass
+                
+        if 1 == int(te[-11]): # "Read is PCR or optical duplicate"
+            with open ("Reads_is_PCR_or_optical_duplicate.txt","a+") as outputOD:
+                outputOD.write(toStringOutput(l))
+
+        if 1 == int(te[-12]): # "Supplementary alignment"
+            with open ("Supplementary_alignment.txt","a+") as outputSA:
+                outputOD.write(toStringOutput(l))
+
 def fastaOutput(sam_line, toto):
     """
-    Fasta output
+    Fasta outputs options for Commons Flags
     """
 
     One_of_the_reads_is_unmapped = ('73','133','89','121','165','181','101','117','153','185','69','137')
@@ -301,18 +364,23 @@ def fastaOutput(sam_line, toto):
         if (flag in One_of_the_reads_is_unmapped and toto == "oum"):                            
             with open("OneUnMapped.fasta", "a+") as Output1:    
                 Output1.write(toStringOutput(l))
+
         if (flag in Both_reads_are_unmapped and toto == "bum"):
             with open("BothUnMapped.fasta", "a+") as Output2:
                 Output2.write(toStringOutput(l))
+
         if (flag in Mapped_within_the_insert_size_and_in_correct_orientation and toto == "co"):
             with open("CorrectOrientation.fasta", "a+") as Output3:
                 Output3.write(toStringOutput(l))
+
         if (flag in Mapped_within_the_insert_size_but_in_wrong_orientation and toto == "wo"):
             with open("WrongOrientation.fasta", "a+") as Output4:
                Output4.write(toStringOutput(l))
+
         if (flag in Mapped_uniquely_but_with_wrong_insert_size and toto == "wi"):
             with open("WrongInsertSize.fasta", "a+") as Output5:
                 Output5.write(toStringOutput(l))
+
         if (flag in test1 and toto == "test"):
             with open("test.fasta", "a") as Output6:
                 Output6.write(toStringOutput(l))
@@ -355,7 +423,8 @@ def main(argv):
 
             if current_argument in ("-f", "--fasta"):
                 print("Output the fasta file.")
-                fastaOutput(resSam, current_value)
+                fastaOutput(resSam, current_value) # for commons Flags
+                flagBin(resSam, current_value) # for Read Unmapped Only
 
         print("Analyse finished.")
                 
