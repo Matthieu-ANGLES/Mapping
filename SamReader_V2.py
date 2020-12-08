@@ -46,6 +46,50 @@ def usage():
     ''')
     sys.exit(-1)
 
+def checkSamFormat (argv): 
+    """
+    Check only two ligne for header and the first line of read
+    """
+
+    # Check samFilename (= argv)
+    fileName, fileExtention = os.path.splitext(argv)
+    if not (fileExtention == ".sam") :
+        print ("****** SAM extention not explicit ******")
+
+    sam_header = []
+    sam_line = []
+    check = 0
+    with open(argv, "r") as sam_file :
+        for line in sam_file:                   
+            if line.startswith("@"):             # Check header motif  
+                header_line = line.strip()
+                sam_header.append(header_line)
+                check = 1
+            else :
+                sam_line.append(line)
+                break
+
+    # Check sam_header (Two lines only)
+    if (check == 0) or (len(sam_header)< 2):
+        print ("*********** Error SAM format ***********")
+        sys.exit()
+
+    # Check sam_line (First line only)
+    if ("\t" not in sam_line[0]) :
+        print ("*********** Error SAM format ***********")
+        sys.exit()
+
+    nbElem = 0
+    line = sam_line[0]
+    line = line.split("\t")
+    for elem in line :
+        nbElem += 1
+
+    if nbElem < 10 :
+        print ("*********** Error SAM format ***********")
+        sys.exit()
+   
+
 def openSamHeader(argv):
     """
     Read a sam file to give header
@@ -101,7 +145,7 @@ def openSamHeader(argv):
         print ("Programme version :",VN)
         print ("Command Line :",CL)
         print ("==================================================================")
-
+        
         summary_header.write("======================= HEADER INFORMATION ======================="+"\n")    
         summary_header.write("Reference sequence name : "+SN+"\n")
         summary_header.write("Reference sequence lenght : "+LN+"\n")
@@ -110,7 +154,8 @@ def openSamHeader(argv):
         summary_header.write("Programme version : "+VN+"\n")
         summary_header.write("Command Line : "+CL+"\n")
         summary_header.write("=================================================================="+"\n")
-
+        
+    return sam_header
 
 def openSam(argv):
     """
@@ -342,6 +387,9 @@ def flagBin (sam_line, toto): # VOIR POUR ECRITURE DANS SUMMARY OU AUTRE UTILISA
         if 1 == int(te[-12]): # "Supplementary alignment"
             with open ("Supplementary_alignment.txt","a+") as outputSA:
                 outputOD.write(toStringOutput(l))
+    
+    #return(?)
+
 
 def fastaOutput(sam_line, toto):
     """
@@ -402,8 +450,11 @@ def main(argv):
                 usage()
                 
             if current_argument in ("-i", "--input"):
+                print("Check Sam format.")
+                checkSamFormat(current_value)
+                
                 print("Read the file.")
-                openSamHeader(current_value)
+                resSamHeader = openSamHeader(current_value)
                 resSam = openSam(current_value)
 
                 print("Parse the flag.")
