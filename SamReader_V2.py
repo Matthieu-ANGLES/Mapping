@@ -340,7 +340,7 @@ def toStringOutput (sam_line):
     qname = str(line[0])
     flag = str(line[1])
     seq = str(line[9])
-    return ("> " + qname + " / flag:"+flag+"\n"+seq+"\n"+"\n")
+    return ("> " + qname + " / flag:"+flag+" GC : "+percentGC(seq)+"%"+"\n"+seq+"\n"+"\n")
 
 def flagBin (sam_line, toto): # VOIR POUR ECRITURE DANS SUMMARY OU AUTRE UTILISATION
     """
