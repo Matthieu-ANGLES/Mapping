@@ -312,6 +312,20 @@ def percentMutation (dico):
             res += ("0.00" + ";")
     return res
 
+def percentGC (seq) :
+    countGC = 0
+    total = 0
+    # Count nucleotides :
+    for n in seq :
+        total += 1
+        #print (n)
+        if (n == 'G') or (n == 'C') :
+            countGC += 1
+    # Calcul percentage :
+    percentGC = (countGC * 100) / total
+    return(percentGC)
+
+
 def parseMAPQ():
     """
     Docstring
