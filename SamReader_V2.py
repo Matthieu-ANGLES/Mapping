@@ -389,7 +389,7 @@ def globalGC(resSam) :
         nbReads +=1
         parse = line.split("\t")
         total += float(percentGC(parse[9]))
-    return (round(total/nbReads),2)
+    return (round(total/nbReads,2))
 
 
 def parseMAPQ():
