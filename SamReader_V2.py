@@ -179,6 +179,8 @@ def outFile(argv):
     """
     os.remove("parse_flag_table.txt")
     os.remove("count_flag_table.txt")
+    os.remove("outpuTable_cigar.txt")
+    os.remove("Final_Cigar_table.txt", argv)
     os.rename("Final_Flag_table.txt", argv)
 
     
@@ -251,6 +253,9 @@ def percFlag(total):
             FinalFlag.write(number2[0] + ";" + number2[1] + ";" + str(round(perc,4)) + "\n")
 
 def parseCigar(sam_line):
+    """
+    Parse sam_line for give a table with
+    """
     cpt = 1
     with open("outpuTable_cigar.txt", "w") as output_sam_cigar:
         for line in sam_line:
@@ -270,6 +275,10 @@ def parseCigar(sam_line):
                 
 
 def readCigar(cigar): # Make a directory with lists key, value
+    """
+    Translate a cigar into un dictionnary (Keys = each mutation, Values = number of each mutation)
+    Use in parseCigar and tranlate in standar output percentagecin percentMutation
+    """
     ext = re.findall('\w',cigar) # split cigar 
     key=[]      # arg string in key list
     value=[]    # arg int in value list
@@ -297,7 +306,9 @@ def readCigar(cigar): # Make a directory with lists key, value
 
 def percentMutation (dico):
     """
-    Functions readCigar : Give percentage for each mutation in readCigar dictionnary
+    Give percentage for each mutation in readCigar dictionnary
+    Standardize the values under the same format of all possible mutations
+    Use in parseCigar with dicionnary gived by readCigar
     """
     totalValue = 0 # Calculated total mutation number
     for v in dico :
@@ -311,6 +322,49 @@ def percentMutation (dico):
         else :
             res += ("0.00" + ";")
     return res
+
+def globalPercentCigar():
+    """
+    Global representation of cigar distribution 
+    """
+    with open ("outpuTable_cigar.txt","r") as outpuTable, open("Final_Cigar_table.txt", "w") as FinalCigar:
+        nbReads = 0
+        percentM = 0
+        percentI = 0
+        percentD = 0
+        percentS = 0
+        percentH = 0
+        percentN = 0
+        percentP = 0
+        percentX = 0
+        percentEgal = 0
+
+        for line in outpuTable :
+            mutValues = line.split(";")
+            nbReads += 2
+            #print(mutValues[2])
+            #print(float(mutValues[2]))
+            #print(type(mutValues[2]))
+            percentM += float(mutValues[2])+float(mutValues[12])
+            percentI += float(mutValues[3])+float(mutValues[13])
+            percentD += float(mutValues[4])+float(mutValues[14])
+            percentS += float(mutValues[5])+float(mutValues[15])
+            percentH += float(mutValues[6])+float(mutValues[16])
+            percentN += float(mutValues[7])+float(mutValues[17])
+            percentP += float(mutValues[8])+float(mutValues[18])
+            percentX += float(mutValues[9])+float(mutValues[19])
+            percentEgal += float(mutValues[10])+float(mutValues[20])
+
+        FinalCigar.write("Global cigar mutation observed :"+"\n"
+                        +"Alignlent Match : "+str(round(percentM/nbReads,2))+"\n"
+                        +"Insertion : "+str(round(percentI/nbReads,2))+"\n"
+                        +"Deletion : "+str(round(percentD/nbReads,2))+"\n"
+                        +"Skipped region : "+str(round(percentS/nbReads,2))+"\n"
+                        +"Soft Clipping : "+str(round(percentH/nbReads,2))+"\n"
+                        +"Hard Clipping : "+str(round(percentN/nbReads,2))+"\n"
+                        +"Padding : "+str(round(percentP/nbReads,2))+"\n"
+                        +"Sequence Match : "+str(round(percentEgal/nbReads,2))+"\n"
+                        +"Sequence Mismatch : "+str(round(percentX/nbReads,2))+"\n")
 
 def percentGC (seq) :
     countGC = 0
@@ -340,7 +394,7 @@ def toStringOutput (sam_line):
     qname = str(line[0])
     flag = str(line[1])
     seq = str(line[9])
-    return ("> " + qname + " / flag:"+flag+" GC : "+percentGC(seq)+"%"+"\n"+seq+"\n"+"\n")
+    return ("> " + qname + " / flag:"+flag+" GC : "+str(percentGC(seq))+"%"+"\n"+seq+"\n"+"\n")
 
 def flagBin (sam_line, toto): # VOIR POUR ECRITURE DANS SUMMARY OU AUTRE UTILISATION
     """
@@ -481,7 +535,11 @@ def main(argv):
                 print("Calculate the percentage for each flag combination.")
                 numberReads = total()
                 percFlag(numberReads)
-                
+
+                print("Calculate the global percentage mutation of cigars")
+                globalPercentCigar()
+
+
             if current_argument in ("-o", "--output"):
                 print("Ouput the file.")
                 outFile(current_value)
