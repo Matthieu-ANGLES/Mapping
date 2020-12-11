@@ -379,6 +379,18 @@ def percentGC (seq) :
     percentGC = (countGC * 100) / total
     return(percentGC)
 
+def globalGC(resSam) :
+    """
+    Count GC and give percent GC of all read of the file
+    """
+    nbReads = 0
+    total = 0
+    for line in resSam :
+        nbReads +=1
+        parse = line.split("\t")
+        total += float(percentGC(parse[9]))
+    return (round(total/nbReads),2)
+
 
 def parseMAPQ():
     """
@@ -386,11 +398,11 @@ def parseMAPQ():
     """
     pass
 
-def toStringOutput (sam_line):
+def toStringOutput (read_line):
     """
     Write function for output
     """
-    line = sam_line.split("\t")
+    line = read_line.split("\t")
     qname = str(line[0])
     flag = str(line[1])
     seq = str(line[9])
@@ -539,6 +551,8 @@ def main(argv):
                 print("Calculate the global percentage mutation of cigars")
                 globalPercentCigar()
 
+                print("Calculate the global GC contain")
+                print("GC percent : ",str(globalGC(resSam)))
 
             if current_argument in ("-o", "--output"):
                 print("Ouput the file.")
