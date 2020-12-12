@@ -177,35 +177,11 @@ def outFile(argv):
     """
     Output file name
     """
-    os.remove("parse_flag_table.txt")
-    os.remove("count_flag_table.txt")
-    os.remove("outpuTable_cigar.txt")
-    os.remove("Final_Cigar_table.txt", argv)
-    os.rename("Final_Flag_table.txt", argv)
-
-    
-def parseFlagCigar(sam_line):
-    """
-    Docstring
-    """
-    cpt = 1 # Initialisation d'un compteur
-    with open("parse_flag_table.txt", "w") as output_sam_flag:
-        for line in sam_line:
-            flag = line.split("\t") # Fractionnement de la line suivant \t
-            if cpt == 1:
-                add_line = [flag[0], flag[1], flag[5]] # ajout de flag1 et cigar1
-                #print(add_line)
-                cpt +=1
-            elif cpt == 2:
-                add_line.append(flag[1])
-                add_line.append(flag[5]) # ajout de flag2 et de cigar 2
-                new_line = "\t".join([add_line[0], add_line[1], add_line[2], add_line[3], add_line[4]])
-                #print(new_line)
-                
-                output_sam_flag.write(add_line[0] + ";" + add_line[1] + ";" + add_line[2] + ";" + add_line[3] + ";" + add_line[4] + "\n")
-                #output_sam_flag.write(
-                
-                cpt = 1
+    #os.remove("parse_flag_table.txt")
+    #os.remove("count_flag_table.txt")
+    #os.remove("outpuTable_cigar.txt")
+    #os.remove("Final_Cigar_table.txt", argv)
+    #os.rename("Final_Flag_table.txt", argv)
 
 def countFlag():
     """
@@ -252,27 +228,55 @@ def percFlag(total):
             newline = ";".join([number2[0],number2[1],str(round(perc,4))])
             FinalFlag.write(number2[0] + ";" + number2[1] + ";" + str(round(perc,4)) + "\n")
 
-def parseCigar(sam_line):
+def parseSamLine(sam_line):
     """
-    Parse sam_line for give a table with
+    Docstring
     """
-    cpt = 1
-    with open("outpuTable_cigar.txt", "w") as output_sam_cigar:
+    cpt = 1 # Initialisation d'un compteur
+    nbReads = 0
+    globalGC = 0
+    with open("parse_flag_table.txt", "w") as output_sam_flag, open("outpuTable_cigar.txt", "w") as output_sam_cigar, open("parse_seq_table.txt", "w") as output_globalGC:
         for line in sam_line:
-            #print(line)
-            cigar = line.split("\t") # Split args line
+            flagcigar = line.split("\t") # Fractionnement de la line suivant \t
             if cpt == 1:
-                add_line = [cigar[0], cigar[5]] # Creation line with Read and cigar R1
+                add_line = [flagcigar[0], flagcigar[1], flagcigar[5]] # ajout de flag1 et cigar1
                 cpt +=1
             elif cpt == 2:
-                add_line.append(cigar[5]) # Add cigar R2 into line
-                c1 = readCigar(add_line[1])
-                #print(c1)
-                c2 = readCigar(add_line[2])
-                #print(c2)
-                output_sam_cigar.write(add_line[0] + ";" + add_line[1] + ";" + percentMutation(c1) + add_line[2] + ";" + percentMutation(c2) + "\n")
-                cpt = 1
+                add_line.append(flagcigar[1])
+                add_line.append(flagcigar[5]) # ajout de flag2 et de cigar 2
+                new_line = "\t".join([add_line[0], add_line[1], add_line[2], add_line[3], add_line[4]])
+                output_sam_flag.write(add_line[0] + ";" + add_line[1] + ";" + add_line[2] + ";" + add_line[3] + ";" + add_line[4] + "\n")
                 
+                c1 = readCigar(add_line[2])
+                c2 = readCigar(add_line[4])
+                output_sam_cigar.write(add_line[0] + ";" + add_line[2] + ";" + percentMutation(c1) + add_line[4] + ";" + percentMutation(c2) + "\n")
+
+                cpt = 1
+            nbReads +=1
+            globalGC += float(percentGC(flagcigar[9]))
+        output_globalGC.write("Global GC percent : "+str(round(globalGC/nbReads,2)))
+
+#def parseCigar(sam_line):
+#    """
+#    Parse sam_line for give a table with
+#    """
+#    cpt = 1
+#    with open("outpuTable_cigar.txt", "w") as output_sam_cigar:
+#        for line in sam_line:
+#            #print(line)
+#            cigar = line.split("\t") # Split args line
+#            if cpt == 1:
+#                add_line = [cigar[0], cigar[5]] # Creation line with Read and cigar R1
+#                cpt +=1
+#            elif cpt == 2:
+#                add_line.append(cigar[5]) # Add cigar R2 into line
+#                c1 = readCigar(add_line[1])
+#                #print(c1)
+#                c2 = readCigar(add_line[2])
+#                #print(c2)
+#                output_sam_cigar.write(add_line[0] + ";" + add_line[1] + ";" + percentMutation(c1) + add_line[2] + ";" + percentMutation(c2) + "\n")
+#                cpt = 1
+             
 
 def readCigar(cigar): # Make a directory with lists key, value
     """
@@ -379,17 +383,17 @@ def percentGC (seq) :
     percentGC = (countGC * 100) / total
     return(percentGC)
 
-def globalGC(resSam) :
-    """
-    Count GC and give percent GC of all read of the file
-    """
-    nbReads = 0
-    total = 0
-    for line in resSam :
-        nbReads +=1
-        parse = line.split("\t")
-        total += float(percentGC(parse[9]))
-    return (round(total/nbReads,2))
+#def globalGC(resSam) :
+#    """
+#    Count GC and give percent GC of all read of the file
+#    """
+#    nbReads = 0
+#    total = 0
+#    for line in resSam :
+#        nbReads +=1
+#        parse = line.split("\t")
+#        total += float(percentGC(parse[9]))
+#    return (round(total/nbReads,2))
 
 
 def parseMAPQ():
@@ -537,9 +541,9 @@ def main(argv):
                 resSamHeader = openSamHeader(current_value)
                 resSam = openSam(current_value)
 
-                print("Parse the flag.")
-                parseFlagCigar(resSam)
-                parseCigar(resSam)
+                print("Parsing.")
+                parseSamLine(resSam)
+                #parseCigar(resSam)
 
                 print("Count the number of read for each flag combinations.")
                 countFlag()
@@ -551,8 +555,8 @@ def main(argv):
                 print("Calculate the global percentage mutation of cigars")
                 globalPercentCigar()
 
-                print("Calculate the global GC contain")
-                print("GC percent : ",str(globalGC(resSam)))
+                #print("Calculate the global GC contain")
+                #print("GC percent : ",str(globalGC(resSam)))
 
             if current_argument in ("-o", "--output"):
                 print("Ouput the file.")
