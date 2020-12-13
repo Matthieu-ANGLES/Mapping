@@ -180,7 +180,8 @@ def outFile(argv):
     #os.remove("parse_flag_table.txt")
     #os.remove("count_flag_table.txt")
     #os.remove("outpuTable_cigar.txt")
-    #os.remove("Final_Cigar_table.txt", argv)
+    #os.remove("parse_seq_table.txt")
+    #os.rename("Final_Cigar_table.txt", argv)
     #os.rename("Final_Flag_table.txt", argv)
 
 def countFlag():
@@ -191,7 +192,8 @@ def countFlag():
         dico = {}
         for line in table_flag:
             flag = line.rstrip("\n").rsplit(";")
-            inter = flag[1] + "-" + flag[3]
+            inter = flag[1] + "-" + flag[2]
+            #inter = flag[1] + "-" + flag[3]
             if inter not in dico.keys():
                 dico[inter] = 1
             else:
@@ -228,6 +230,41 @@ def percFlag(total):
             newline = ";".join([number2[0],number2[1],str(round(perc,4))])
             FinalFlag.write(number2[0] + ";" + number2[1] + ";" + str(round(perc,4)) + "\n")
 
+def countGC():
+    """
+    Docstring
+    """
+    with open("outpuTable_GC_percent.txt", "r") as table_GCpercent, open("Final_GC_table.txt", "w") as FinalGC:
+        dico = {"70-100":0,"60-70":0,"50-60":0,"40-50":0,"30-40":0,"0-30":0}
+        nbReads = 0
+        for line in table_GCpercent:
+            nbReads += 1
+            parse = line.rstrip("\n").rsplit(";")
+            percentGC = float(parse[1])
+            if percentGC >= 70 and percentGC <= 100 :
+                dico["70-100"] += 1
+            if percentGC >= 60 and percentGC < 70 :
+                dico["60-70"] += 1
+            if percentGC >= 50 and percentGC < 60 :
+                dico["50-60"] += 1
+            if percentGC >= 40 and percentGC < 50 :
+                dico["40-50"] += 1
+            if percentGC >= 30 and percentGC < 40 :
+                dico["30-40"] += 1
+            if percentGC >= 0 and percentGC < 30 :
+                dico["0-30"] += 1
+        
+        dicoPercent = {"70-100":0,"60-70":0,"50-60":0,"40-50":0,"30-40":0,"0-30":0}
+        for k in dico :
+            dicoPercent[k] = (dico[k]*100)/nbReads
+
+        FinalGC.write("GC%: >70%: "+str(dico["70-100"])+" ("+str(round(dicoPercent["70-100"],2))+"%)\n"
+                        +"GC%: >60%: "+str(dico["60-70"])+" ("+str(round(dicoPercent["60-70"],2))+"%)\n"
+                        +"GC%: >50%: "+str(dico["50-60"])+" ("+str(round(dicoPercent["50-60"],2))+"%)\n"
+                        +"GC%: >40%: "+str(dico["40-50"])+" ("+str(round(dicoPercent["40-50"],2))+"%)\n"
+                        +"GC%: >30%: "+str(dico["30-40"])+" ("+str(round(dicoPercent["30-40"],2))+"%)\n"
+                        +"GC%: <30%: "+str(dico["0-30"])+" ("+str(round(dicoPercent["0-30"],2))+"%)\n")
+
 def parseSamLine(sam_line):
     """
     Docstring
@@ -235,26 +272,32 @@ def parseSamLine(sam_line):
     cpt = 1 # Initialisation d'un compteur
     nbReads = 0
     globalGC = 0
-    with open("parse_flag_table.txt", "w") as output_sam_flag, open("outpuTable_cigar.txt", "w") as output_sam_cigar, open("parse_seq_table.txt", "w") as output_globalGC:
+    with open("parse_flag_table.txt", "w") as output_sam_flag, open("outpuTable_cigar.txt", "w") as output_sam_cigar, open("outpuTable_GC_percent.txt", "w") as output_GCpercent:
         for line in sam_line:
-            flagcigar = line.split("\t") # Fractionnement de la line suivant \t
+            parse = line.split("\t") # Fractionnement de la line suivant \t
             if cpt == 1:
-                add_line = [flagcigar[0], flagcigar[1], flagcigar[5]] # ajout de flag1 et cigar1
+                add_line = [parse[0], parse[1], parse[5], parse[9]] # ajout de flag1 et cigar1
                 cpt +=1
             elif cpt == 2:
-                add_line.append(flagcigar[1])
-                add_line.append(flagcigar[5]) # ajout de flag2 et de cigar 2
+                add_line.append(parse[1]) # ajout de flag2 et de cigar 2 et seq2
+                add_line.append(parse[5]) 
+                add_line.append(parse[9]) 
+
+                # sert à quoi le new line ?
                 new_line = "\t".join([add_line[0], add_line[1], add_line[2], add_line[3], add_line[4]])
-                output_sam_flag.write(add_line[0] + ";" + add_line[1] + ";" + add_line[2] + ";" + add_line[3] + ";" + add_line[4] + "\n")
-                
+                output_sam_flag.write(add_line[0] + ";" + add_line[1] + ";" + add_line[4] + "\n")
+
                 c1 = readCigar(add_line[2])
-                c2 = readCigar(add_line[4])
-                output_sam_cigar.write(add_line[0] + ";" + add_line[2] + ";" + percentMutation(c1) + add_line[4] + ";" + percentMutation(c2) + "\n")
+                c2 = readCigar(add_line[5])
+                output_sam_cigar.write(add_line[0] + ";" + add_line[2] + ";" + percentMutation(c1) + add_line[5] + ";" + percentMutation(c2) + "\n")
+
+                GC1 = percentGC(add_line[3])
+                output_GCpercent.write(add_line[0] + ";" + str(GC1) + "\n")
+                GC2 = percentGC(add_line[6])
+                output_GCpercent.write(add_line[0] + ";" + str(GC2) + "\n")
 
                 cpt = 1
-            nbReads +=1
-            globalGC += float(percentGC(flagcigar[9]))
-        output_globalGC.write("Global GC percent : "+str(round(globalGC/nbReads,2)))
+
 
 #def parseCigar(sam_line):
 #    """
@@ -409,8 +452,10 @@ def toStringOutput (read_line):
     line = read_line.split("\t")
     qname = str(line[0])
     flag = str(line[1])
+    mapQ = str(line[4])
+    cigar = str(line[5])
     seq = str(line[9])
-    return ("> " + qname + " / flag:"+flag+" GC : "+str(percentGC(seq))+"%"+"\n"+seq+"\n"+"\n")
+    return ("> " + qname + " | flag:"+flag+" | cigar:"+ cigar +" | mapQ:"+mapQ+" | GC:"+str(round(percentGC(seq),2))+"%"+"\n"+seq+"\n"+"\n")
 
 def flagBin (sam_line, toto): # VOIR POUR ECRITURE DANS SUMMARY OU AUTRE UTILISATION
     """
@@ -555,8 +600,8 @@ def main(argv):
                 print("Calculate the global percentage mutation of cigars")
                 globalPercentCigar()
 
-                #print("Calculate the global GC contain")
-                #print("GC percent : ",str(globalGC(resSam)))
+                print("Calculate the percentage of GC contain")
+                countGC()
 
             if current_argument in ("-o", "--output"):
                 print("Ouput the file.")
