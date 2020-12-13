@@ -137,14 +137,14 @@ def openSamHeader(argv):
             if line.startswith("@HD"):
             '''
 
-        print ("======================= HEADER INFORMATION =======================")
-        print ("Reference sequence name :",SN)
-        print ("Reference sequence lenght :",LN)
-        print ("Programme record identifier :",ID)
-        print ("Programme name :",PN)
-        print ("Programme version :",VN)
-        print ("Command Line :",CL)
-        print ("==================================================================")
+        #print ("======================= HEADER INFORMATION =======================")
+        #print ("Reference sequence name :",SN)
+        #print ("Reference sequence lenght :",LN)
+        #print ("Programme record identifier :",ID)
+        #print ("Programme name :",PN)
+        #print ("Programme version :",VN)
+        #print ("Command Line :",CL)
+        #print ("==================================================================")
         
         summary_header.write("======================= HEADER INFORMATION ======================="+"\n")    
         summary_header.write("Reference sequence name : "+SN+"\n")
@@ -165,7 +165,7 @@ def openSam(argv):
     sam_header = []
     sam_line = []
     
-    with open(argv, "r") as sam_file, open("summary.txt", "w") as summary :
+    with open(argv, "r") as sam_file :
         for line in sam_file:
             if line.startswith("@"):
                pass
@@ -177,12 +177,33 @@ def outFile(argv):
     """
     Output file name
     """
-    #os.remove("parse_flag_table.txt")
-    #os.remove("count_flag_table.txt")
-    #os.remove("outpuTable_cigar.txt")
-    #os.remove("parse_seq_table.txt")
-    #os.rename("Final_Cigar_table.txt", argv)
-    #os.rename("Final_Flag_table.txt", argv)
+    os.remove("summary_header.txt")
+    os.remove("parse_flag_table.txt")
+    os.remove("count_flag_table.txt")
+    os.remove("outpuTable_cigar.txt")
+    os.remove("outpuTable_GC_percent.txt")
+    # mettre remove aux fichier ci dessous ? (car summary accessible)
+    os.rename("Final_Flag_table.txt", argv+"_Flag.txt")
+    os.rename("Final_Cigar_table.txt", argv+"_Cigar.txt")
+    os.rename("Final_GC_table.txt", argv+"_GC.txt")
+    
+def computeSummary ():
+    with open("summary_header.txt", "r") as F_Head, open("Final_Flag_table.txt", "r") as F_flag, open("Final_Cigar_table.txt", "r") as F_Cigar, open("Final_GC_table.txt", "r") as F_GC, open("summary.txt", "a+") as F_Sum :
+        for line in F_Head :
+            l = line.rstrip("\n")
+            F_Sum.write(line)
+        F_Sum.write("\n")
+        for line in F_flag :
+            l = line.rstrip("\n")
+            F_Sum.write(line)
+        F_Sum.write("\n")    
+        for line in F_Cigar :
+            l = line.rstrip("\n")
+            F_Sum.write(line)
+        F_Sum.write("\n")
+        for line in F_GC :
+            l = line.rstrip("\n")
+            F_Sum.write(line)
 
 def countFlag():
     """
@@ -276,7 +297,7 @@ def parseSamLine(sam_line):
         for line in sam_line:
             parse = line.split("\t") # Fractionnement de la line suivant \t
             if cpt == 1:
-                add_line = [parse[0], parse[1], parse[5], parse[9]] # ajout de flag1 et cigar1
+                add_line = [parse[0], parse[1], parse[5], parse[9]] # ajout de flag1 et cigar1 et seq1
                 cpt +=1
             elif cpt == 2:
                 add_line.append(parse[1]) # ajout de flag2 et de cigar 2 et seq2
@@ -603,16 +624,23 @@ def main(argv):
                 print("Calculate the percentage of GC contain")
                 countGC()
 
+                print("Compute Summary")
+                computeSummary()
+
             if current_argument in ("-o", "--output"):
                 print("Ouput the file.")
                 outFile(current_value)
 
             if current_argument in ("-f", "--fasta"):
-                print("Output the fasta file.")
+                print("Compute the fasta file.")
                 fastaOutput(resSam, current_value) # for commons Flags
                 flagBin(resSam, current_value) # for Read Unmapped Only
 
         print("Analyse finished.")
+
+        with open ("summary.txt") as summary :
+            for line in summary :
+                print (line)
                 
     except getopt.error as err:
         # Output error, and return with an error code
