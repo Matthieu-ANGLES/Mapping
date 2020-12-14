@@ -131,11 +131,7 @@ def openSamHeader(argv):
                         VN = elem[3:]
                     if elem.startswith("CL"):
                         CL = elem[3:]
-            '''
-            if line.startswith("@RG"):   on fait aussi ?
-            if line.startswith("@CO"):
-            if line.startswith("@HD"):
-            '''
+   
 
         #print ("======================= HEADER INFORMATION =======================")
         #print ("Reference sequence name :",SN)
