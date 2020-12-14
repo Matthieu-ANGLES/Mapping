@@ -6,6 +6,7 @@ Programme name : bwa
 Programme version : 0.7.9a-r786
 Command Line : /home/e20140028067/Bureau/TPsnpSV/bwa-0.7.9a/bwa mem ../TPsnpSV/reference.fasta ../TPsnpSV/fastqDir/Clone1_1.fastq ../TPsnpSV/fastqDir/Clone1_2.fastq
 ==================================================================
+
 Mate unmapped: 300
 Read reverse strand: 45
 Mate reverse strand: 500
