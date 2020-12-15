@@ -16,7 +16,6 @@ __date__ = "12/21/2020"
 
 ############### IMPORT MODULES ###############
 
-
 import os, sys, re, getopt
 
 
@@ -83,6 +82,7 @@ def checkSamFormat (argv):
             else :
                 sam_line.append(line)
                 break
+    return (fileName)
 
     # Check sam_header (Two lines only)
     if (check == 0) or (len(sam_header)< 2):
@@ -155,7 +155,7 @@ def openSamHeader(argv):
         summary_header.write("Programme name : "+PN+"\n")
         summary_header.write("Programme version : "+VN+"\n")
         summary_header.write("Command Line : "+CL+"\n")
-        summary_header.write("=================================================================="+"\n")
+        #summary_header.write("=================================================================="+"\n")
         
     return sam_header
 
@@ -317,36 +317,28 @@ def countFlag():
         for key in dico.keys():
             output_flag.write(key + ";" + str(dico[key]) + "\n")
 
-def percFlag(total):
+def perceFlag(): #total
     """
       This function compute the percentage for each combination flag and return a table with the combinations, 
       their reads numbers and their percentages.
     """
+
+    total = 0
+    with open("count_flag_table.txt", "r") as output_sam_flag1 :
+        for line in output_sam_flag1:
+            number = line.rstrip("\n").split(";")
+            numberi = int(number[1])
+            total = numberi + total
     
     percList = []
-    with open("count_flag_table.txt", "r") as output_sam_flag, open("Final_Flag_table.txt", "w") as FinalFlag:
-        for line in output_sam_flag:
-            number2 = line.rstrip("\n").split(";")
+    with open("count_flag_table.txt", "r") as output_sam_flag2, open("Final_Flag_table.txt", "w") as FinalFlag:
+        for line2 in output_sam_flag2:
+            number2 = line2.rstrip("\n").split(";")
             perc = (int(number2[1]) * 100) / total
             newline = ";".join([number2[0],number2[1],str(round(perc,4))])
             #print(newline)
             FinalFlag.write(number2[0] + ";" + number2[1] + ";" + str(round(perc,4)) + "\n")
-
-def total():
-    """
-      Count the total number for each flag combination present in the count table. 
-    """
-    
-    with open("count_flag_table.txt", "r") as output_sam_flag:
-        total = 0
-    
-        for line in output_sam_flag:
-            number = line.rstrip("\n").split(";")
-            numberi = int(number[1])
-            total = numberi + total
-            
-        return total
-
+ 
 def readCigar(cigar): # Make a directory with lists key, value
     """
     Translate a cigar into un dictionnary (Keys = each mutation, Values = number of each mutation)
@@ -404,56 +396,46 @@ def globalPercentCigar():
     """
     
     with open ("outpuTable_cigar.txt","r") as outpuTable, open("Final_Cigar_table.txt", "w") as FinalCigar:
-        nbReads = 0
-        percentM = 0
-        percentI = 0
-        percentD = 0
-        percentS = 0
-        percentH = 0
-        percentN = 0
-        percentP = 0
-        percentX = 0
-        percentEgal = 0
+        nbReads, M, I, D, S, H, N, P, X, Egal = [0 for n in range(10)]
 
         for line in outpuTable :
             mutValues = line.split(";")
             nbReads += 2
-            percentM += float(mutValues[2])+float(mutValues[12])
-            percentI += float(mutValues[3])+float(mutValues[13])
-            percentD += float(mutValues[4])+float(mutValues[14])
-            percentS += float(mutValues[5])+float(mutValues[15])
-            percentH += float(mutValues[6])+float(mutValues[16])
-            percentN += float(mutValues[7])+float(mutValues[17])
-            percentP += float(mutValues[8])+float(mutValues[18])
-            percentX += float(mutValues[9])+float(mutValues[19])
-            percentEgal += float(mutValues[10])+float(mutValues[20])
+            M += float(mutValues[2])+float(mutValues[12])
+            I += float(mutValues[3])+float(mutValues[13])
+            D += float(mutValues[4])+float(mutValues[14])
+            S += float(mutValues[5])+float(mutValues[15])
+            H += float(mutValues[6])+float(mutValues[16])
+            N += float(mutValues[7])+float(mutValues[17])
+            P += float(mutValues[8])+float(mutValues[18])
+            X += float(mutValues[9])+float(mutValues[19])
+            Egal += float(mutValues[10])+float(mutValues[20])
 
         FinalCigar.write("Global cigar mutation observed :"+"\n"
-                        +"Alignlent Match : "+str(round(percentM/nbReads,2))+"\n"
-                        +"Insertion : "+str(round(percentI/nbReads,2))+"\n"
-                        +"Deletion : "+str(round(percentD/nbReads,2))+"\n"
-                        +"Skipped region : "+str(round(percentS/nbReads,2))+"\n"
-                        +"Soft Clipping : "+str(round(percentH/nbReads,2))+"\n"
-                        +"Hard Clipping : "+str(round(percentN/nbReads,2))+"\n"
-                        +"Padding : "+str(round(percentP/nbReads,2))+"\n"
-                        +"Sequence Match : "+str(round(percentEgal/nbReads,2))+"\n"
-                        +"Sequence Mismatch : "+str(round(percentX/nbReads,2))+"\n")
+                        +"Alignlent Match : "+str(round(M/nbReads,2))+"\n"
+                        +"Insertion : "+str(round(I/nbReads,2))+"\n"
+                        +"Deletion : "+str(round(D/nbReads,2))+"\n"
+                        +"Skipped region : "+str(round(S/nbReads,2))+"\n"
+                        +"Soft Clipping : "+str(round(H/nbReads,2))+"\n"
+                        +"Hard Clipping : "+str(round(N/nbReads,2))+"\n"
+                        +"Padding : "+str(round(P/nbReads,2))+"\n"
+                        +"Sequence Match : "+str(round(Egal/nbReads,2))+"\n"
+                        +"Sequence Mismatch : "+str(round(X/nbReads,2))+"\n")
 
 def percentGC(seq):
     """
-    Docstring
+      Formula :  ( (G+C) / (A+T+G+C) * 100 )
     """
     countGC = 0
-    total = 0
+    countAT = 0
     # Count nucleotides :
     for n in seq :
-        total += 1
-        #print (n)
         if (n == 'G') or (n == 'C') :
             countGC += 1
+        if (n == 'A') or (n == 'T') :
+            countAT += 1
     # Calcul percentage :
-    percentGC = (countGC * 100) / total
-    return(percentGC)
+    return((countGC/(countAT+countGC))*100)
 
 def countGC():
     """
@@ -545,12 +527,15 @@ def fastaOutput(sam_line, toto):
             with open("test.fasta", "a") as Output6:
                 Output6.write(toStringOutput(l))
 
-def computeSummary ():
+def computeSummary (fileName):
     with open("summary_header.txt", "r") as F_Head, open("Final_Flag_table.txt", "r") as F_flag, open("Final_Cigar_table.txt", "r") as F_Cigar, open("Final_GC_table.txt", "r") as F_GC, open("summary.txt", "a+") as F_Sum :
+        F_Sum.write("==================================================================\n"+
+                    "  >  Summary "+fileName+"\n")
         for line in F_Head :
             l = line.rstrip("\n")
             F_Sum.write(line)
         F_Sum.write("\n")
+        F_Sum.write("======================= PARSE INFORMATIONS =======================\n")
         for line in F_flag :
             l = line.rstrip("\n")
             F_Sum.write(line)
@@ -563,7 +548,7 @@ def computeSummary ():
             l = line.rstrip("\n")
             F_Sum.write(line)
 
-def outFile(): #outFile(argv):   argv ??
+def outFile(fileName): 
     """
     Output file name
     """
@@ -576,6 +561,7 @@ def outFile(): #outFile(argv):   argv ??
     os.remove("Final_Flag_table.txt")
     os.remove("Final_Cigar_table.txt")
     os.remove("Final_GC_table.txt")
+    os.rename("summary.txt",fileName+"_summary.txt")
 
 #### Main function ####
 
@@ -600,7 +586,7 @@ def main(argv):
                 
             if current_argument in ("-i", "--input"):
                 print("Check Sam format.")
-                checkSamFormat(current_value)
+                fileName = checkSamFormat(current_value)
                 
                 print("Read the file.")
                 resSamHeader = openSamHeader(current_value)
@@ -614,8 +600,9 @@ def main(argv):
                 countFlag()
 
                 print("Calculate the percentage for each flag combination.")
-                numberReads = total()
-                percFlag(numberReads)
+                #numberReads = total()
+                #percFlag(numberReads)
+                perceFlag()
 
                 print("Calculate the global percentage mutation of cigars")
                 globalPercentCigar()
@@ -624,11 +611,12 @@ def main(argv):
                 countGC()
 
                 print("Compute Summary")
-                computeSummary()
+                computeSummary(fileName)
 
             if current_argument in ("-o", "--output"):
                 print("Ouput the file.")
-                # outFile(current_value)
+                # voir pour options ?!!
+                #outFile(fileName)  mis en dernier car affichage et renommage summary plus bas
 
             if current_argument in ("-f", "--fasta"):
                 print("Compute the fasta file.")
@@ -642,7 +630,7 @@ def main(argv):
                 l = line.rstrip("\n")
                 print (l)
         
-        outFile()
+        outFile(fileName)
                 
     except getopt.error as err:
         # Output error, and return with an error code
