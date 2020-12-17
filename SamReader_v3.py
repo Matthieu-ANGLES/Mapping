@@ -213,109 +213,325 @@ def parseSamLine(sam_line):
 
 #### Calculus functions ####
 
+def flagBinary (flag) :
+    flagB = bin(int(flag)) 
+    flagB = flagB[2:] # Remove '0b' Example: '0b1001101' > '1001101'
+    flagB = list(flagB) 
+
+    if len(flagB) < 12: # Size ajustement to 12 (normalized size)
+        add = 12 - len(flagB) 
+        for t in range(add):
+            flagB.insert(0,'0')
+
+    return (flagB)
+
+def flagBin2(sam_line): # VOIR POUR ECRITURE DANS SUMMARY OU AUTRE UTILISATION
+    """
+      Provides binary traduction of the Flag.
+      Fasta outputs options for Read Unmapped or others informations.
+    """
+    with open("bin_Flag_table.txt", "w") as output_bin_flag:
+        
+        flag_counts = {"TotalReads":0}
+        ReadName1 = "Je suis le read1 et j'en suis fier"
+        
+        for l in sam_line:
+            flag_counts["TotalReads"] += 1
+            line = l.split("\t")
+            ReadName = str(line[0])
+
+            if ReadName != ReadName1 :
+                ReadName1 = ReadName    # il est le read1
+                lineRead1 = l
+                #print (lineRead1)
+            else :                      # il est le read2
+                lineRead2 = l  
+                #print (lineRead2)
+
+                line1 = lineRead1.split("\t")
+                line2 = lineRead2.split("\t")
+                flagB1 = flagBinary(line1[1])
+                flagB2 = flagBinary(line2[1])
+                mapq1 = int(line1[4])
+                mapq2 = int(line2[4])
+                
+                # Voir si utile :
+                #cigar1 = readCigar(line1[5])
+                #cigar2 = readCigar(line2[5])
+                #GC1 = percentGC(line1[9])
+                #GC2 = percentGC(line2[9])
+
+
+                # Cas où les deux reads sont mappés :
+                if int(flagB1[-2]) == 1 and int(flagB2[-2]) == 1 :
+                    if mapq1 >= 60 and mapq2 >= 60 : # Qualité >+ 60 (ajouter condition cigar aussi ?)
+                        # Comptage reads mappés bonnes qualités +2
+                        if "Reads_correctement_mappés_et_bonne_qualite" not in flag_counts.keys():
+                            flag_counts["Reads_correctement_mappés_et_bonne_qualite"] = 2
+                        else:
+                            flag_counts["Reads_correctement_mappés_et_bonne_qualite"] += 2
+                        # Comptage combanaisons mappés mauvaises qualités +1 
+                        if "Paires_mappés" not in flag_counts.keys():
+                            flag_counts["Reads_correctement_mappés_et_bonne_qualite"] = 1
+                        else:
+                            flag_counts["Reads_correctement_mappés_et_bonne_qualite"] += 1
+                    else:
+                        # Comptage reads mappés mauvaises qualités +2
+                        if "Reads_correctement_mappés_mais_mauvaise_qualite" not in flag_counts.keys():
+                            flag_counts["Reads_correctement_mappés_mais_mauvaise_qualite"] = 2
+                        else:
+                            flag_counts["Reads_correctement_mappés_mais_mauvaise_qualite"] += 2
+                        # Comptage combinaisons mauvaises qualités +1
+                        if "Paires_mappés" not in flag_counts.keys():
+                            flag_counts["Reads_correctement_mappés_mais_mauvaise_qualite"] = 1
+                        else:
+                            flag_counts["Reads_correctement_mappés_mais_mauvaise_qualite"] += 1
+
+                # Cas où les deux reads ne sont pas mappés :
+                if int(flagB1[-3]) == 1 and int(flagB2[-3]) == 1 :
+                        # Comptage reads non-mappés +2
+                        if "Reads_non_mappés" not in flag_counts.keys():
+                            flag_counts["Reads_non_mappés"] = 2
+                        else:
+                            flag_counts["Reads_non_mappés"] += 2
+                        # Comptage combainaison non-mappés +1
+                        if "Paires_non_mappés" not in flag_counts.keys():
+                            flag_counts["Paires_non_mappés"] = 1
+                        else:
+                            flag_counts["Paires_non_mappés"] += 1
+
+                # Cas où le read1 est mappé et le read2 est non-mappé :
+                if int(flagB1[-2]) == 1 and int(flagB2[-3]) == 1 :
+                    # Comptage reads non-mappés +1
+                    if "Reads_non_mappés" not in flag_counts.keys():
+                        flag_counts["Reads_non_mappés"] = 1
+                    else:
+                        flag_counts["Reads_non_mappés"] += 1
+
+                    if mapq1 >= 60 : # Qualité >+ 60 (ajouter condition cigar aussi ?)
+                        # Comptage reads mappés bonnes qualités +1                      
+                        if "Reads_correctement_mappés_et_bonne_qualite" not in flag_counts.keys():
+                            flag_counts["Reads_correctement_mappés_et_bonne_qualite"] = 1
+                        else:
+                            flag_counts["Reads_correctement_mappés_et_bonne_qualite"] += 1     
+                        # Comptage combinaison Un Read mappés bonne qualité et Autre Read non mappés +1
+                        if "UnRead_correctement_mappés_et_bonne_qualite_et_AutreRead_non_mappés" not in flag_counts.keys():
+                            flag_counts["UnRead_correctement_mappés_et_bonne_qualite_et_AutreRead_non_mappés"] = 1
+                        else:
+                            flag_counts["UnRead_correctement_mappés_et_bonne_qualite_et_AutreRead_non_mappés"] += 1
+                    else:
+                        # Comptage reads mappés mauvaise qualités +1 
+                        if "Reads_correctement_mappés_mais_mauvaise_qualite" not in flag_counts.keys():
+                            flag_counts["Reads_correctement_mappés_mais_mauvaise_qualite"] = 1
+                        else:
+                            flag_counts["Reads_correctement_mappés_mais_mauvaise_qualite"] += 1
+                        # Comptage combinaison UnRead mappés mauvaise qualité et Autre Read non mappés +1
+                        if "UnRead_correctement_mappés_mais_mauvaise_qualite_et_AutreRead_non_mappés" not in flag_counts.keys():
+                            flag_counts["UnRead_correctement_mappés_mais_mauvaise_qualite_et_AutreRead_non_mappés"] = 1
+                        else:
+                            flag_counts["UnRead_correctement_mappés_mais_mauvaise_qualite_et_AutreRead_non_mappés"] += 1
+
+                # Cas où le read1 est non-mappé et le read2 est mappé :
+                if int(flagB1[-2]) == 1 and int(flagB2[-3]) == 1 :
+                    # Comptage reads non-mappés +1
+                    if "Reads_non_mappés" not in flag_counts.keys():
+                        flag_counts["Reads_non_mappés"] = 1
+                    else:
+                        flag_counts["Reads_non_mappés"] += 1
+
+                    if mapq2 >= 60 : # Qualité >+ 60 (ajouter condition cigar aussi ?)
+                        # Comptage reads mappés bonnes qualités +1                      
+                        if "Reads_correctement_mappés_et_bonne_qualite" not in flag_counts.keys():
+                            flag_counts["Reads_correctement_mappés_et_bonne_qualite"] = 1
+                        else:
+                            flag_counts["Reads_correctement_mappés_et_bonne_qualite"] += 1     
+                        # Comptage combinaison Un Read mappés bonne qualité et Autre Read non mappés +1
+                        if "UnRead_correctement_mappés_et_bonne_qualite_et_AutreRead_non_mappés" not in flag_counts.keys():
+                            flag_counts["UnRead_correctement_mappés_et_bonne_qualite_et_AutreRead_non_mappés"] = 1
+                        else:
+                            flag_counts["UnRead_correctement_mappés_et_bonne_qualite_et_AutreRead_non_mappés"] += 1
+                    else:
+                        # Comptage reads mappés mauvaise qualités +1 
+                        if "Reads_correctement_mappés_mais_mauvaise_qualite" not in flag_counts.keys():
+                            flag_counts["Reads_correctement_mappés_mais_mauvaise_qualite"] = 1
+                        else:
+                            flag_counts["Reads_correctement_mappés_mais_mauvaise_qualite"] += 1
+                        # Comptage combinaison UnRead mappés mauvaise qualité et Autre Read non mappés +1
+                        if "UnRead_correctement_mappés_mais_mauvaise_qualite_et_AutreRead_non_mappés" not in flag_counts.keys():
+                            flag_counts["UnRead_correctement_mappés_mais_mauvaise_qualite_et_AutreRead_non_mappés"] = 1
+                        else:
+                            flag_counts["UnRead_correctement_mappés_mais_mauvaise_qualite_et_AutreRead_non_mappés"] += 1
+
+                # Cas où le read1 est mappé et le read2 est dans le mauvais sens :
+                if int(flagB1[-2]) == 1 and int(flagB2[-5]) == 1 :
+                    # Comptage reads mauvais sens +1
+                    if "Reads_mauvais_sens" not in flag_counts.keys():
+                        flag_counts["Reads_mauvais_sens"] = 1
+                    else:
+                        flag_counts["Reads_mauvais_sens"] += 1
+
+                    if mapq1 >= 60 : # Qualité >+ 60 (ajouter condition cigar aussi ?)
+                        # Comptage reads mappés bonnes qualités +1                      
+                        if "Reads_correctement_mappés_et_bonne_qualite" not in flag_counts.keys():
+                            flag_counts["Reads_correctement_mappés_et_bonne_qualite"] = 1
+                        else:
+                            flag_counts["Reads_correctement_mappés_et_bonne_qualite"] += 1     
+                        # Comptage combinaison Un Read mappés bonne qualité et Autre Read dans le mauvais sens +1
+                        if "UnRead_correctement_mappés_et_bonne_qualite_et_AutreRead_mauvais_sens" not in flag_counts.keys():
+                            flag_counts["UnRead_correctement_mappés_et_bonne_qualite_et_AutreRead_mauvais_sens"] = 1
+                        else:
+                            flag_counts["UnRead_correctement_mappés_et_bonne_qualite_et_AutreRead_mauvais_sens"] += 1
+                    else:
+                        # Comptage reads mappés mauvaise qualités +1 
+                        if "Reads_correctement_mappés_mais_mauvaise_qualite" not in flag_counts.keys():
+                            flag_counts["Reads_correctement_mappés_mais_mauvaise_qualite"] = 1
+                        else:
+                            flag_counts["Reads_correctement_mappés_mais_mauvaise_qualite"] += 1
+                        # Comptage combinaison UnRead mappés mauvaise qualité et Autre Read mauvais sens +1
+                        if "UnRead_correctement_mappés_mais_mauvaise_qualite_et_AutreRead_mauvais_sens" not in flag_counts.keys():
+                            flag_counts["UnRead_correctement_mappés_mais_mauvaise_qualite_et_AutreRead_mauvais_sens"] = 1
+                        else:
+                            flag_counts["UnRead_correctement_mappés_mais_mauvaise_qualite_et_AutreRead_mauvais_sens"] += 1
+
+                # Cas où le read1 est dans le mauvais sens et le read2 est mappé :
+                if int(flagB1[-5]) == 1 and int(flagB2[-2]) == 1 :
+                    # Comptage reads mauvais sens +1
+                    if "Reads_mauvais_sens" not in flag_counts.keys():
+                        flag_counts["Reads_mauvais_sens"] = 1
+                    else:
+                        flag_counts["Reads_mauvais_sens"] += 1
+
+                    if mapq2 >= 60 : # Qualité >+ 60 (ajouter condition cigar aussi ?)
+                        # Comptage reads mappés bonnes qualités +1                      
+                        if "Reads_correctement_mappés_et_bonne_qualite" not in flag_counts.keys():
+                            flag_counts["Reads_correctement_mappés_et_bonne_qualite"] = 1
+                        else:
+                            flag_counts["Reads_correctement_mappés_et_bonne_qualite"] += 1     
+                        # Comptage combinaison Un Read mappés bonne qualité et Autre Read dans le mauvais sens +1
+                        if "UnRead_correctement_mappés_et_bonne_qualite_et_AutreRead_mauvais_sens" not in flag_counts.keys():
+                            flag_counts["UnRead_correctement_mappés_et_bonne_qualite_et_AutreRead_mauvais_sens"] = 1
+                        else:
+                            flag_counts["UnRead_correctement_mappés_et_bonne_qualite_et_AutreRead_mauvais_sens"] += 1
+                    else:
+                        # Comptage reads mappés mauvaise qualités +1 
+                        if "Reads_correctement_mappés_mais_mauvaise_qualite" not in flag_counts.keys():
+                            flag_counts["Reads_correctement_mappés_mais_mauvaise_qualite"] = 1
+                        else:
+                            flag_counts["Reads_correctement_mappés_mais_mauvaise_qualite"] += 1
+                        # Comptage combinaison UnRead mappés mauvaise qualité et Autre Read mauvais sens +1
+                        if "UnRead_correctement_mappés_mais_mauvaise_qualite_et_AutreRead_mauvais_sens" not in flag_counts.keys():
+                            flag_counts["UnRead_correctement_mappés_mais_mauvaise_qualite_et_AutreRead_mauvais_sens"] = 1
+                        else:
+                            flag_counts["UnRead_correctement_mappés_mais_mauvaise_qualite_et_AutreRead_mauvais_sens"] += 1
+
+        #return flag_counts
+        for k in flag_counts :
+            output_bin_flag.write(k+" : "+str(flag_counts[k])+"\n")
+
+# Version Benoit -----------------------------------------------------------------
 def flagBin(sam_line, out): # VOIR POUR ECRITURE DANS SUMMARY OU AUTRE UTILISATION
     """
       Provides binary traduction of the Flag.
       Fasta outputs options for Read Unmapped or others informations.
     """
-    with open("bin_flag_table.txt", "w") as output_bin_flag:
-        flag_description = {}
+    #with open("bin_Flag_table.txt", "w") as output_bin_flag:
+    flag_description = {}
     
-        for l in sam_line:          
-            line = l.split("\t") 
-            flag = str(line[1])  # Line Flag retrieval
+    for l in sam_line:          
+        line = l.split("\t") 
+        flag = str(line[1])  # Line Flag retrieval
         
-            te = bin(int(flag)) #### entre 0 et 4095 => mettre une securite !!!!!!
-            te = te[2:] # Remove '0b' Example: '0b1001101' > '1001101'
-            te = list(te) 
+        te = bin(int(flag)) #### entre 0 et 4095 => mettre une securite !!!!!!
+        te = te[2:] # Remove '0b' Example: '0b1001101' > '1001101'
+        te = list(te) 
 
-            if len(te) < 12: # Size ajustement to 12 (normalized size)
-                add = 12 - len(te) 
-                for t in range(add):
-                    te.insert(0,'0')
+        if len(te) < 12: # Size ajustement to 12 (normalized size)
+            add = 12 - len(te) 
+            for t in range(add):
+                te.insert(0,'0')
 
-            # Flag traduction
-            if 1 == int(te[-1]): # "Read paired"
-                if "Read paired" not in flag_description.keys():
-                    flag_description["Read paired"] = 1
-                else:
-                    flag_description["Read paired"] += 1
+        # Flag traduction
+        if 1 == int(te[-1]): # "Read paired"
+            if "Read paired" not in flag_description.keys():
+                flag_description["Read paired"] = 1
+            else:
+                flag_description["Read paired"] += 1
 
-            if 1 == int(te[-2]): # "Read mapped in proper pair"
-                if "Read mapped in proper pair" not in flag_description.keys():
-                    flag_description["Read mapped in proper pair"] = 1
-                else:
-                    flag_description["Read mapped in proper pair"] += 1
+        if 1 == int(te[-2]): # "Read mapped in proper pair"
+            if "Read mapped in proper pair" not in flag_description.keys():
+                flag_description["Read mapped in proper pair"] = 1
+            else:
+                flag_description["Read mapped in proper pair"] += 1
                   
-            if (1 == int(te[-3]) and out == "umo"): # "Read unmapped"
-                with open ("Reads_unmapped_only.txt","a+") as outputUMO:
-                    outputUMO.write(toStringOutput(l))
+        if (1 == int(te[-3]) and out == "umo"): # "Read unmapped"
+            #with open ("Reads_unmapped_only.txt","a+") as outputUMO:
+            #    outputUMO.write(toStringOutput(l))
                 
-                    if "Read unmapped" not in flag_description.keys():
-                        flag_description["Read unmapped"] = 1
-                    else:
-                        flag_description["Read unmapped"] += 1
-                
-            if 1 == int(te[-4]): # "Mate unmapped"
-                if "Mate unmapped" not in flag_description.keys():
-                    flag_description["Mate unmapped"] = 1
+                if "Read unmapped" not in flag_description.keys():
+                    flag_description["Read unmapped"] = 1
                 else:
-                    flag_description["Mate unmapped"] += 1
+                    flag_description["Read unmapped"] += 1
                 
-            if 1 == int(te[-5]): # "Read reverse strand"
-                if "Read reverse strand" not in flag_description.keys():
-                    flag_description["Read reverse strand"] = 1
-                else:
-                    flag_description["Read reverse strand"] += 1
+        if 1 == int(te[-4]): # "Mate unmapped"
+            if "Mate unmapped" not in flag_description.keys():
+                flag_description["Mate unmapped"] = 1
+            else:
+                flag_description["Mate unmapped"] += 1
                 
-            if 1 == int(te[-6]): # "Mate reverse strand"
-                if "Mate reverse strand" not in flag_description.keys():
-                    flag_description["Mate reverse strand"] = 1
-                else:
-                    flag_description["Mate reverse strand"] += 1
+        if 1 == int(te[-5]): # "Read reverse strand"
+            if "Read reverse strand" not in flag_description.keys():
+                flag_description["Read reverse strand"] = 1
+            else:
+                flag_description["Read reverse strand"] += 1
+                
+        if 1 == int(te[-6]): # "Mate reverse strand"
+            if "Mate reverse strand" not in flag_description.keys():
+                flag_description["Mate reverse strand"] = 1
+            else:
+                flag_description["Mate reverse strand"] += 1
             
-            if 1 == int(te[-7]): # "First in pair"
-                if "First in pair" not in flag_description.keys():
-                    flag_description["First in pair"] = 1
-                else:
-                    flag_description["First in pair"] += 1
+        if 1 == int(te[-7]): # "First in pair"
+            if "First in pair" not in flag_description.keys():
+                flag_description["First in pair"] = 1
+            else:
+                flag_description["First in pair"] += 1
                 
-            if 1 == int(te[-8]): # "Second in pair"
-                if "Second in pair" not in flag_description.keys():
-                    flag_description["Second in pair"] = 1
-                else:
-                    flag_description["Second in pair"] += 1
+        if 1 == int(te[-8]): # "Second in pair"
+            if "Second in pair" not in flag_description.keys():
+                flag_description["Second in pair"] = 1
+            else:
+                flag_description["Second in pair"] += 1
 
-            if 1 == int(te[-9]): # "Not primary alignment"
-                if "Not primary alignment" not in flag_description.keys():
-                    flag_description["Not primary alignment"] = 1
-                else:
-                    flag_description["Not primary alignment"] += 1
+        if 1 == int(te[-9]): # "Not primary alignment"
+            if "Not primary alignment" not in flag_description.keys():
+                flag_description["Not primary alignment"] = 1
+            else:
+                flag_description["Not primary alignment"] += 1
                 
-            if 1 == int(te[-10]): # "Read fails platform/vendor quality checks"
-                if "Read fails platform/vendor quality checks" not in flag_description.keys():
-                    flag_description["Read fails platform/vendor quality checks"] = 1
-                else:
-                    flag_description["Read fails platform/vendor quality checks"] += 1
+        if 1 == int(te[-10]): # "Read fails platform/vendor quality checks"
+            if "Read fails platform/vendor quality checks" not in flag_description.keys():
+                flag_description["Read fails platform/vendor quality checks"] = 1
+            else:
+                flag_description["Read fails platform/vendor quality checks"] += 1
                 
-            if 1 == int(te[-11]): # "Read is PCR or optical duplicate"
-                #with open ("Reads_is_PCR_or_optical_duplicate.txt","a+") as outputOD:
-             #   outputOD.write(toStringOutput(l))
-                if "Read is PCR or optical duplicate" not in flag_description.keys():
-                    flag_description["Read is PCR or optical duplicate"] = 1
-                else:
-                    flag_description["Read is PCR or optical duplicate"] += 1
+        if 1 == int(te[-11]): # "Read is PCR or optical duplicate"
+            #with open ("Reads_is_PCR_or_optical_duplicate.txt","a+") as outputOD:
+         #   outputOD.write(toStringOutput(l))
+            if "Read is PCR or optical duplicate" not in flag_description.keys():
+                flag_description["Read is PCR or optical duplicate"] = 1
+            else:
+                flag_description["Read is PCR or optical duplicate"] += 1
                 
-            if 1 == int(te[-12]): # "Supplementary alignment"
-                if "Supplementary alignment" not in flag_output.keys():
-                    flag_description["Supplementary alignment"] = 1
-                else:
-                    flag_description["Supplementary alignment"] += 1
-                    # with open ("Supplementary_alignment.txt","a+") as outputSA:
-                    #    outputOD.write(toStringOutput(l))
+        if 1 == int(te[-12]): # "Supplementary alignment"
+            if "Supplementary alignment" not in flag_output.keys():
+                flag_description["Supplementary alignment"] = 1
+            else:
+                flag_description["Supplementary alignment"] += 1
+                # with open ("Supplementary_alignment.txt","a+") as outputSA:
+                #    outputOD.write(toStringOutput(l))
 
-        for k in flag_description.keys():
-            output_bin_flag.write(k + ":" + str(flag_description[k]) + "\n")
+    for k in flag_description.keys():
+        output_bin_flag.write(k + ":" + str(flag_description[k]) + "\n")
             
     return flag_description
 
@@ -496,14 +712,15 @@ def countGC():
 
 def toStringOutput (read_line):
     """
-      Write function for output
+    Write function for output
     """
-    
     line = read_line.split("\t")
     qname = str(line[0])
     flag = str(line[1])
+    mapQ = str(line[4])
+    cigar = str(line[5])
     seq = str(line[9])
-    return ("> " + qname + " / flag:"+flag+" GC : "+str(percentGC(seq))+"%"+"\n"+seq+"\n"+"\n")
+    return ("> " + qname + " | flag:"+flag+" | cigar:"+ cigar +" | mapQ:"+mapQ+" | GC:"+str(round(percentGC(seq),2))+"%"+"\n"+seq+"\n"+"\n")
 
 def fastaOutput(sam_line, toto):
     """
@@ -578,7 +795,7 @@ def outFile(fileName):
     os.remove("count_flag_table.txt")
     os.remove("outpuTable_cigar.txt")
     os.remove("outpuTable_GC_percent.txt")
-    os.remove("Final_Flag_table.txt")
+    #os.remove("Final_Flag_table.txt")
     os.remove("Final_Cigar_table.txt")
     os.remove("Final_GC_table.txt")
     os.rename("summary.txt", fileName + "_summary.txt")
@@ -615,6 +832,7 @@ def main(argv):
                 print("Parsing.")
                 parseSamLine(resSam)
                 #parseCigar(resSam)
+                flagBin2(resSam)
 
                 print("Count the number of read for each flag combinations.")
                 countFlag()
@@ -643,14 +861,13 @@ def main(argv):
                 fastaOutput(resSam, current_value) # for commons Flags
                 flagBin(resSam, current_value) # for Read Unmapped Only
 
+
         print("Analyse finished.")
 
         with open ("summary.txt") as summary :
             for line in summary :
                 l = line.rstrip("\n")
                 print (l)
-        
-        outFile(fileName)
                 
     except getopt.error as err:
         # Output error, and return with an error code
