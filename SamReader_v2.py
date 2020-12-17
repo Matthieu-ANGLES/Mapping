@@ -73,6 +73,7 @@ def checkSamFormat (argv):
     sam_header = []
     sam_line = []
     check = 0
+    
     with open(argv, "r") as sam_file :
         for line in sam_file:                   
             if line.startswith("@"):    # Check header motif  
@@ -82,7 +83,6 @@ def checkSamFormat (argv):
             else :
                 sam_line.append(line)
                 break
-    return (fileName)
 
     # Check sam_header (Two lines only)
     if (check == 0) or (len(sam_header)< 2):
@@ -103,6 +103,8 @@ def checkSamFormat (argv):
     if nbElem < 10 :
         print ("*********** Error SAM format ***********")
         sys.exit()
+
+    return (fileName)
 
 def openSamHeader(argv):
     """
@@ -196,8 +198,6 @@ def parseSamLine(sam_line):
                 add_line.append(parse[5]) 
                 add_line.append(parse[9]) 
 
-                # sert à quoi le new line ?
-                new_line = "\t".join([add_line[0], add_line[1], add_line[2], add_line[3], add_line[4]])
                 output_sam_flag.write(add_line[0] + ";" + add_line[1] + ";" + add_line[4] + "\n")
 
                 c1 = readCigar(add_line[2])
@@ -213,91 +213,111 @@ def parseSamLine(sam_line):
 
 #### Calculus functions ####
 
-def flagBin (sam_line, toto): # VOIR POUR ECRITURE DANS SUMMARY OU AUTRE UTILISATION
+def flagBin(sam_line, out): # VOIR POUR ECRITURE DANS SUMMARY OU AUTRE UTILISATION
     """
-      Provides binary traduction of the Flag
-      Fasta outputs options for Read Unmapped or others informations
+      Provides binary traduction of the Flag.
+      Fasta outputs options for Read Unmapped or others informations.
     """
+    with open("bin_flag_table.txt", "w") as output_bin_flag:
+        flag_description = {}
     
-    for l in sam_line:          
-        line = l.split("\t") 
-        flag = str(line[1])  # Line Flag retrieval
+        for l in sam_line:          
+            line = l.split("\t") 
+            flag = str(line[1])  # Line Flag retrieval
+        
+            te = bin(int(flag)) #### entre 0 et 4095 => mettre une securite !!!!!!
+            te = te[2:] # Remove '0b' Example: '0b1001101' > '1001101'
+            te = list(te) 
 
-        te = bin(int(flag)) #### entre 0 et 4095 => mettre une securite !!!!!!
-        te = te[2:] # Remove '0b' Example: '0b1001101' > '1001101'
-        te = list(te) 
+            if len(te) < 12: # Size ajustement to 12 (normalized size)
+                add = 12 - len(te) 
+                for t in range(add):
+                    te.insert(0,'0')
 
-        if len(te) < 12: # Size ajustement to 12 (normalized size)
-            add = 12 - len(te) 
-            for t in range(add):
-                te.insert(0,'0')
+            # Flag traduction
+            if 1 == int(te[-1]): # "Read paired"
+                if "Read paired" not in flag_description.keys():
+                    flag_description["Read paired"] = 1
+                else:
+                    flag_description["Read paired"] += 1
 
-        # Flag traduction
-        if 1 == int(te[-1]): # "Read paired"
-            pass
-
-        if 1 == int(te[-2]): # "Read mapped in proper pair"
-            pass
-                  #
-                  #
-                  #    WE NEED TO COUNT HERE !
-                  #
-                  #
+            if 1 == int(te[-2]): # "Read mapped in proper pair"
+                if "Read mapped in proper pair" not in flag_description.keys():
+                    flag_description["Read mapped in proper pair"] = 1
+                else:
+                    flag_description["Read mapped in proper pair"] += 1
                   
-        if (1 == int(te[-3]) and toto == "umo"): # "Read unmapped"
-            with open ("Reads_unmapped_only.txt","a+") as outputUMO:
-                outputUMO.write(toStringOutput(l))
-                  #
-                  #
-                  #    WE NEED TO COUNT HERE !
-                  #
-                  #
+            if (1 == int(te[-3]) and out == "umo"): # "Read unmapped"
+                with open ("Reads_unmapped_only.txt","a+") as outputUMO:
+                    outputUMO.write(toStringOutput(l))
                 
-        if 1 == int(te[-4]): # "Mate unmapped"
-            pass
+                    if "Read unmapped" not in flag_description.keys():
+                        flag_description["Read unmapped"] = 1
+                    else:
+                        flag_description["Read unmapped"] += 1
                 
-        if 1 == int(te[-5]): # "Read reverse strand"
-            pass
-                  #
-                  #
-                  #    WE NEED TO COUNT HERE !
-                  #
-                  #
+            if 1 == int(te[-4]): # "Mate unmapped"
+                if "Mate unmapped" not in flag_description.keys():
+                    flag_description["Mate unmapped"] = 1
+                else:
+                    flag_description["Mate unmapped"] += 1
                 
-        if 1 == int(te[-6]): # "Mate reverse strand"
-            pass
+            if 1 == int(te[-5]): # "Read reverse strand"
+                if "Read reverse strand" not in flag_description.keys():
+                    flag_description["Read reverse strand"] = 1
+                else:
+                    flag_description["Read reverse strand"] += 1
                 
-        if 1 == int(te[-7]): # "First in pair"
-            pass
+            if 1 == int(te[-6]): # "Mate reverse strand"
+                if "Mate reverse strand" not in flag_description.keys():
+                    flag_description["Mate reverse strand"] = 1
+                else:
+                    flag_description["Mate reverse strand"] += 1
+            
+            if 1 == int(te[-7]): # "First in pair"
+                if "First in pair" not in flag_description.keys():
+                    flag_description["First in pair"] = 1
+                else:
+                    flag_description["First in pair"] += 1
                 
-        if 1 == int(te[-8]): # "Second in pair"
-            pass
+            if 1 == int(te[-8]): # "Second in pair"
+                if "Second in pair" not in flag_description.keys():
+                    flag_description["Second in pair"] = 1
+                else:
+                    flag_description["Second in pair"] += 1
 
-        if 1 == int(te[-9]): # "Not primary alignment"
-            pass
-                  #
-                  #
-                  #    WE NEED TO COUNT HERE !
-                  #
-                  #
+            if 1 == int(te[-9]): # "Not primary alignment"
+                if "Not primary alignment" not in flag_description.keys():
+                    flag_description["Not primary alignment"] = 1
+                else:
+                    flag_description["Not primary alignment"] += 1
                 
-        if 1 == int(te[-10]): # "Read fails platform/vendor quality checks"
-            pass
+            if 1 == int(te[-10]): # "Read fails platform/vendor quality checks"
+                if "Read fails platform/vendor quality checks" not in flag_description.keys():
+                    flag_description["Read fails platform/vendor quality checks"] = 1
+                else:
+                    flag_description["Read fails platform/vendor quality checks"] += 1
                 
-        if 1 == int(te[-11]): # "Read is PCR or optical duplicate"
-            with open ("Reads_is_PCR_or_optical_duplicate.txt","a+") as outputOD:
-                outputOD.write(toStringOutput(l))
-                  #
-                  #
-                  #    WE NEED TO COUNT HERE !
-                  #
-                  #
+            if 1 == int(te[-11]): # "Read is PCR or optical duplicate"
+                #with open ("Reads_is_PCR_or_optical_duplicate.txt","a+") as outputOD:
+             #   outputOD.write(toStringOutput(l))
+                if "Read is PCR or optical duplicate" not in flag_description.keys():
+                    flag_description["Read is PCR or optical duplicate"] = 1
+                else:
+                    flag_description["Read is PCR or optical duplicate"] += 1
+                
+            if 1 == int(te[-12]): # "Supplementary alignment"
+                if "Supplementary alignment" not in flag_output.keys():
+                    flag_description["Supplementary alignment"] = 1
+                else:
+                    flag_description["Supplementary alignment"] += 1
+                    # with open ("Supplementary_alignment.txt","a+") as outputSA:
+                    #    outputOD.write(toStringOutput(l))
 
-        if 1 == int(te[-12]): # "Supplementary alignment"
-            with open ("Supplementary_alignment.txt","a+") as outputSA:
-                outputOD.write(toStringOutput(l))
-    
-    #return(?) YES ! Whitout we can't put in the screen summary :-( 
+        for k in flag_description.keys():
+            output_bin_flag.write(k + ":" + str(flag_description[k]) + "\n")
+            
+    return flag_description
 
 def countFlag():
     """
@@ -528,7 +548,7 @@ def fastaOutput(sam_line, toto):
                 Output6.write(toStringOutput(l))
 
 def computeSummary (fileName):
-    with open("summary_header.txt", "r") as F_Head, open("Final_Flag_table.txt", "r") as F_flag, open("Final_Cigar_table.txt", "r") as F_Cigar, open("Final_GC_table.txt", "r") as F_GC, open("summary.txt", "a+") as F_Sum :
+    with open("summary_header.txt", "r") as F_Head, open("bin_Flag_table.txt", "r") as F_flag, open("Final_Cigar_table.txt", "r") as F_Cigar, open("Final_GC_table.txt", "r") as F_GC, open("summary.txt", "a+") as F_Sum :
         F_Sum.write("==================================================================\n"+
                     "  >  Summary "+fileName+"\n")
         for line in F_Head :
@@ -561,7 +581,7 @@ def outFile(fileName):
     os.remove("Final_Flag_table.txt")
     os.remove("Final_Cigar_table.txt")
     os.remove("Final_GC_table.txt")
-    os.rename("summary.txt",fileName+"_summary.txt")
+    os.rename("summary.txt", fileName + "_summary.txt")
 
 #### Main function ####
 
