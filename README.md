@@ -5,7 +5,7 @@
 
 ## More information:
 
-- NAME:
+NAME:
 
     SamReader
 
