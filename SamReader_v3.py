@@ -214,6 +214,9 @@ def parseSamLine(sam_line):
 #### Calculus functions ####
 
 def flagBinary (flag) :
+    """
+      
+    """
     flagB = bin(int(flag)) 
     flagB = flagB[2:] # Remove '0b' Example: '0b1001101' > '1001101'
     flagB = list(flagB) 
@@ -554,7 +557,7 @@ def globalPercentCigar():
 
 def percentGC(seq):
     """
-      Formula :  ( (G+C) / (A+T+G+C) * 100 )
+      Formula :  ((G+C) / (A+T+G+C) * 100)
     """
     countGC = 0
     countAT = 0
