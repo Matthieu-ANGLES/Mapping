@@ -31,31 +31,50 @@ def usage():
     sys.stderr.write('''
     
     NAME:
-         SamReader
+        SamReader
 
     VERSION:
-         0.0.1
+        0.0.1
+
+    DATE: 
+        12/21/2020
 
     FUNCTION:
-         SamReader is a parser program for samtools files (.sam).
+        SamReader is a parser program for samtools files (.sam).
 
     OPTION LIST:
-         -h or --help : help information
-         -i or --input: input file (.sam)
-         -o or --output: output name files
+        -h or --help : help information
+        -i or --input: input file (.sam)
+        -o or --output: output name files
 
     EXAMPLES:
-         python SamReader.py -h # Launch the help
-         python SamReader.py -i <file> # Launch SamReader to analyse a samtools file (.sam).
-         python SamReader.py -i <file> -o <name>
-         python SamReader.py -i <file> -f <option> # explain
+        python SamReader.py -h # Launch the help.
+        python SamReader.py -i <file> # Launch SamReader to analyse a samtools file (.sam).
+        python SamReader.py -i <file> -o <name>
+        python SamReader.py -i <file> -f <option> # explain
+
+    TROUBLESHOOTINGS:
+        If you encounter one or several malfunctions when you execute this software, 
+        please contact us (see our e-mail addresses below).
 
     AUTHORS:
-         Benoit ALIAGA (aliaga.benoit@gmail.com)
-         Matthieu ANGLES (matthieu.angles@hotmail.fr)
-
+        Benoit ALIAGA (aliaga.benoit@gmail.com)
+        Matthieu ANGLES (matthieu.angles@hotmail.fr)
+        
     MORE INFORMATIONS:
-         https://github.com/wanaga3166/Mapping
+        https://github.com/wanaga3166/Mapping
+    
+    LICENCE:
+        This program is free software: you can redistribute it and/or modify
+        it under the terms of the GNU General Public License as published by
+        the Free Software Foundation, either version 3 of the License, or
+        (at your option) any later version.
+        This program is distributed in the hope that it will be useful,
+        but WITHOUT ANY WARRANTY; without even the implied warranty of
+        MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+        GNU General Public License for more details.
+        You should have received a copy of the GNU General Public License
+        along with this program. If not, see <https://www.gnu.org/licenses/>.
     
     ''')
     sys.exit(-1)
@@ -104,7 +123,6 @@ def checkSamFormat(argv):
         print ("*********** Error SAM format ***********")
         sys.exit()
 
-    print(fileName)
     return fileName
 
 def openSamHeader(argv):
@@ -163,8 +181,15 @@ def openSamHeader(argv):
     return sam_header
 
 def openSam(argv):
-    """
-      Open a sam file and get the lines after the header.   
+    """ Open a sam file and get the lines after the header. 
+
+    Parameters
+    ----------
+    samtools file (.sam) as argv.
+
+    Returns
+    -------
+    A list of line from a sam file.
     """
 
     sam_header = []
@@ -182,8 +207,15 @@ def openSam(argv):
 
 
 def parseSamLine(sam_line):
-    """
-    Docstring
+    """ Parse function of a list which containt the sam file lines. 
+
+    Parameters
+    ----------
+    sam_line (a list of )
+
+    Returns
+    -------
+    None
     """
     cpt = 1 # Initialisation d'un compteur
     nbReads = 0
@@ -214,25 +246,40 @@ def parseSamLine(sam_line):
 
 #### Calculus functions ####
 
-def flagBinary (flag) :
-    """
-      
+def flagBinary(flag) :
+    """ Convert the flag into binary.
+
+    Parameters
+    ----------
+    flag from a sam file (samtools) (integer)
+
+    Returns
+    -------
+    a list of integer.
     """
     flagB = bin(int(flag)) 
     flagB = flagB[2:] # Remove '0b' Example: '0b1001101' > '1001101'
     flagB = list(flagB) 
 
-    if len(flagB) < 12: # Size ajustement to 12 (normalized size)
+    if len(flagB) < 12: # Size adjustement to 12 (normalized size)
         add = 12 - len(flagB) 
         for t in range(add):
             flagB.insert(0,'0')
 
-    return (flagB)
+    return flagB
 
 def flagBin2(sam_line): # VOIR POUR ECRITURE DANS SUMMARY OU AUTRE UTILISATION
-    """
-      Provides binary traduction of the Flag.
-      Fasta outputs options for Read Unmapped or others informations.
+    """Provides binary traduction of the flag extracted previously in the parseSamLine function.
+      
+    Fasta outputs options for Read Unmapped or others informations.
+
+    Parameters
+    ----------
+    sam_line (a list of )
+
+    Returns
+    -------
+    None
     """
     with open("bin_Flag_table.txt", "w") as output_bin_flag:
         
@@ -557,8 +604,17 @@ def globalPercentCigar():
                         +"Sequence Mismatch : "+str(round(X/nbReads,2))+"\n")
 
 def percentGC(seq):
-    """
-      Formula :  ((G+C) / (A+T+G+C) * 100)
+    """ Compute the GC percentage in a sequence (see the formula below). 
+    Formula :  ((G+C) / (A+T+G+C) * 100)
+
+    Parameters
+    ----------
+    A sequence (seq) extracted from a sam file (samtools).
+
+    Returns
+    -------
+    a float
+    
     """
     countGC = 0
     countAT = 0
@@ -572,8 +628,17 @@ def percentGC(seq):
     return((countGC/(countAT+countGC))*100)
 
 def countGC():
-    """
-    Docstring
+    """ Count the GC
+
+    This function doesn't have a parameter and write a text file which summarize the GC% in the file.
+
+    Parameters
+    ----------
+    None
+
+    Returns
+    -------
+    Nonce
     """
     with open("outpuTable_GC_percent.txt", "r") as table_GCpercent, open("Final_GC_table.txt", "w") as FinalGC:
         dico = {"70-100":0,"60-70":0,"50-60":0,"40-50":0,"30-40":0,"0-30":0}
@@ -623,18 +688,17 @@ def toStringOutput(read_line):
 def computeSummary(fileName):
     """ computeSummary will write a summary file.
 
-    This function need a
+    This function need the name of the flag
 
     Parameters
     ----------
-    
+    file name 
 
     Returns
     -------
     None
 
     """
-
 
     with open("summary_header.txt", "r") as F_Head, open("bin_Flag_table.txt", "r") as F_flag, open("Final_Cigar_table.txt", "r") as F_Cigar, open("Final_GC_table.txt", "r") as F_GC, open("summary.txt", "a+") as F_Sum:
         F_Sum.write("==================================================================\n"+
@@ -729,7 +793,6 @@ def main(argv):
             if current_argument in ("-i", "--input"):
                 print("Check Sam format.")
                 fileName = checkSamFormat(current_value)
-                print(fileName)
                 
                 print("Read the file.")
                 resSamHeader = openSamHeader(current_value)
