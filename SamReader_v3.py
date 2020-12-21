@@ -786,11 +786,6 @@ def main(argv):
                 computeSummary(fileName)
                 summaryPrint()
 
-            if current_argument in ("-f", "--fasta"):
-                print("Compute the fasta file.")
-                fastaOutput(resSam, current_value) # for commons Flags
-                flagBin(resSam, current_value) # for Read Unmapped Only
-
             if current_argument in ("-o", "--output"):
                 print("Ouput the file.")
                 # voir pour options ?!!
