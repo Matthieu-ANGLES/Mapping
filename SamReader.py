@@ -81,7 +81,7 @@ def usage():
     ''')
     sys.exit(-1)
 
-def checkSamFormat (argv): 
+def checkSamFormat(argv): 
     """
       Check only two ligne for header and the first line of read
     """
@@ -220,13 +220,14 @@ def parseSam(sam_line):
             flag = line.split("\t") # Fractionnement de la line suivant \t
             if cpt == 1:
                 add_line = [flag[0], flag[1]]
+                #print(add_line)
                 cpt +=1
 
             elif cpt == 2:
                 add_line.append(flag[1]) # ajout de flag2
                 new_line = " \t ".join([add_line[0], add_line[1], add_line[2]])
                 #print(new_line)
-                #output_sam_flag.write(add_line[0] + ";" + add_line[1] + ";" + add_line[2] + "\n")
+                output_sam_flag.write(add_line[0] + ";" + add_line[1] + ";" + add_line[2] + "\n")
                 cpt = 1
 
 def flagBinary(flag):
@@ -246,7 +247,7 @@ def flagBinary(flag):
 
 def unmapped(sam_line):
     """
-        Analyse the reads which are unmapped.
+        Analyse the reads which are unmapped (not paired).
     """
     
     unmapped_cout = 0
@@ -295,7 +296,7 @@ def pairedMapped1_Partial2(sam_line):
 
     with open ("read1_mapped_read2_partially.fasta", "a+") as mapped1_partially2_fasta:
 
-        # Option 1: the first read is correctly mapped.
+        # Option 1: the first read is correctly mapped and the second is partially mapped.
         for line in sam_line:
             col_line = line.split("\t") # Fractionnement de la line suivant \t
             flag = flagBinary(col_line[1])
@@ -315,7 +316,7 @@ def pairedMapped1_Partial2(sam_line):
                 nameRead1 = ''
                 cpt = 1
 
-        # Option 2: the second read is correctly mapped.
+        # Option 2: the first read is partially mapped and the second read is correctly mapped.
         for line in sam_line:
             col_line = line.split("\t") # Fractionnement de la line suivant \t
             flag = flagBinary(col_line[1])
@@ -340,13 +341,53 @@ def pairedMapped1_Partial2(sam_line):
                 nameRead1 = ''
                 nameRead2 = ''
                 cpt = 1
-                   
-    
-    print(pairedMapped1Partially2_count)
+                Read1 = ''
+                Read2 = ''
+                    
+    print("Paired reads", pairedMapped1Partially2_count)
     #return mapped1_partially2
 
 def mapped1_unmapped2(sam_line):
-    pass
+    """
+        Analyze the paired read which are mapped for the first one and unmapped for the second one.
+        A fasta file will be written at the end of the script.
+    """
+
+    pairedMapped1Unmapped2_count = 0
+    cpt = 1 # Initialisation d'un compteur
+    nameRead1 = ''
+
+    with open ("read1_mapped_read2_unmapped.fasta", "a+") as mapped1_unmapped2_fasta:
+
+        # Option 1: the first read is correctly mapped and the second read is unmapped.
+        for line in sam_line:
+            col_line = line.split("\t") # Fractionnement de la line suivant \t
+            flag = flagBinary(col_line[1])
+
+            if cpt == 1:
+                if int(flag[-2]) == 1: # Correctly mapped
+                    nameRead1 = col_line[0]
+                    Read1 = line
+                    print(nameRead1)
+                    #print(Read1)
+                cpt += 1
+            elif cpt == 2:
+                nameRead2 = col_line[0]
+                if nameRead2 == nameRead1:
+                    print(nameRead2)
+                    print("It's the same !")
+                    if int(flag[-3]) == 1:
+                        Read2 = line
+                        print(Read2)
+                        #mapped1_unmapped2_fasta.write(writeFasta(Read1))
+                        #mapped1_unmapped2_fasta.write(writeFasta(Read2))               
+                nameRead1 = ''
+                nameRead2 = ''
+                cpt = 1
+                Read1 = ''
+                Read2 = ''
+
+        # Option 2: the first read is unmapped and the second read is correctly mapped.
 
 def flagBin(sam_line):
     """
@@ -464,7 +505,52 @@ def flagBin(sam_line):
                 
 #### Calculus functions ####
 
+def countFlag():
+     """
+     Count the flag number in the sam file.
+     """
+     with open("parse_flag_table.txt", "r") as table_flag, open("count_flag_table.txt", "w") as output_flag:
+         dico = {}
+         for line in table_flag:
+             flag = line.rstrip("\n").rsplit(";")
+             inter = flag[1] + "-" + flag[2]
+             if inter not in dico.keys():
+                 dico[inter] = 1
+             else:
+                 dico[inter] += 1
+             #print(dico)
+         for key in dico.keys():
+             output_flag.write(key + ";" + str(dico[key]) + "\n")
 
+def percFlag(total):
+     """
+     Docstring
+     """
+     percList = []
+     with open("count_flag_table.txt", "r") as output_sam_flag, open("Final_Flag_table.txt", "w") as FinalFlag:
+         for line in output_sam_flag:
+             number2 = line.rstrip("\n").split(";")
+             perc = (int(number2[1]) * 100) / total
+             newline = ";".join([number2[0],number2[1],str(round(perc,4))])
+             FinalFlag.write(number2[0] + ";" + number2[1] + ";" + str(round(perc,4)) + "\n")
+
+def total():
+     """
+     Docstring
+     """
+     with open("count_flag_table.txt", "r") as output_sam_flag:
+         total = 0
+
+         for line in output_sam_flag:
+             #print(line)
+             number = line.rstrip("\n").split(";")
+             numberi = int(number[1])
+             #print(numberi)
+             total = numberi + total
+         #print(total)
+         return total
+
+             
 #### Output functions ####
 
 def writeFasta(read_line):
@@ -486,7 +572,14 @@ def readSummary():
             l = line.rstrip("\n")
             print (l)
 
-
+def outFile():
+    """
+    Output file name
+    """
+    os.remove("parse_flag_table.txt")
+    os.remove("count_flag_table.txt")
+    #os.rename("Final_Flag_table.txt", argv)
+            
 #### Main function ####
 
 def main(argv):
@@ -521,6 +614,7 @@ def main(argv):
 
                 print("Parse the file.")
                 test1 = flagBin(resSam)
+                parseSam(resSam)
                 
                 print("Analyze the only the unmapped reads.")
                 unmapped(resSam)
@@ -528,8 +622,19 @@ def main(argv):
                 print("Analyze the only the partially mapped reads.")
                 partiallyMapped(resSam)
 
-                print("Analyze the reads which are mapped in the first read and partially mapped in the second read.")
+                print("Analyze the reads which are mapped in one read and partially mapped in the other read.")
                 pairedMapped1_Partial2(resSam)
+
+                #print("Analyze the reads which are mapped in one read and unmapped in the other read.")
+                #mapped1_unmapped2(resSam)
+
+                print("Construct the final summary table.")
+                countFlag()
+                numberReads = total()
+                percFlag(numberReads)
+
+                # Remove the intermediate tables.
+                outFile()
 
         print("Analyse finished. \n")
 
