@@ -578,7 +578,8 @@ def outFile():
     """
     os.remove("parse_flag_table.txt")
     os.remove("count_flag_table.txt")
-    #os.rename("Final_Flag_table.txt", argv)
+    os.remove()
+    os.rename("Final_Flag_table.txt", argv)
             
 #### Main function ####
 
@@ -625,16 +626,16 @@ def main(argv):
                 print("Analyze the reads which are mapped in one read and partially mapped in the other read.")
                 pairedMapped1_Partial2(resSam)
 
-                #print("Analyze the reads which are mapped in one read and unmapped in the other read.")
-                #mapped1_unmapped2(resSam)
+                print("Analyze the reads which are mapped in one read and unmapped in the other read.")
+                mapped1_unmapped2(resSam)
 
                 print("Construct the final summary table.")
                 countFlag()
                 numberReads = total()
                 percFlag(numberReads)
 
-                # Remove the intermediate tables.
-                outFile()
+            if current_argument in ("-o", "--output"):
+                outFile(current_value) # Remove the intermediate tables and rename the files.
 
         print("Analyse finished. \n")
 
