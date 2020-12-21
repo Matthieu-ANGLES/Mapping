@@ -60,7 +60,7 @@ def usage():
     ''')
     sys.exit(-1)
 
-def checkSamFormat (argv): 
+def checkSamFormat(argv): 
     """
       Check only two ligne for header and the first line of read
     """
@@ -104,7 +104,8 @@ def checkSamFormat (argv):
         print ("*********** Error SAM format ***********")
         sys.exit()
 
-    return (fileName)
+    print(fileName)
+    return fileName
 
 def openSamHeader(argv):
     """
@@ -607,7 +608,7 @@ def countGC():
 
 #### Output functions ####
 
-def toStringOutput (read_line):
+def toStringOutput(read_line):
     """
     Write function for output
     """
@@ -619,52 +620,25 @@ def toStringOutput (read_line):
     seq = str(line[9])
     return ("> " + qname + " | flag:"+flag+" | cigar:"+ cigar +" | mapQ:"+mapQ+" | GC:"+str(round(percentGC(seq),2))+"%"+"\n"+seq+"\n"+"\n")
 
-def fastaOutput(sam_line, toto):
+def computeSummary(fileName):
+    """ computeSummary will write a summary file.
+
+    This function need a
+
+    Parameters
+    ----------
+    
+
+    Returns
+    -------
+    None
+
     """
-      Fasta outputs options for Commons Flags
-    """
 
-    One_of_the_reads_is_unmapped = ('73','133','89','121','165','181','101','117','153','185','69','137')
-    Both_reads_are_unmapped = ('77','141')
-    Mapped_within_the_insert_size_and_in_correct_orientation = ('99','147','83','163')
-    Mapped_within_the_insert_size_but_in_wrong_orientation = ('67','131','115','179')
-    Mapped_uniquely_but_with_wrong_insert_size = ('81','161','97','145','65','129','113','177')
-    test1 = ('83','163','77','141')
 
-    #### voir pour expatrier les listes ci-dessus en lecture de flag binaire ####
-
-    for l in sam_line:
-        line = l.split("\t")
-        flag = str(line[1])
-        
-        if (flag in One_of_the_reads_is_unmapped and toto == "oum"):                            
-            with open("OneUnMapped.fasta", "a+") as Output1:    
-                Output1.write(toStringOutput(l))
-
-        if (flag in Both_reads_are_unmapped and toto == "bum"):
-            with open("BothUnMapped.fasta", "a+") as Output2:
-                Output2.write(toStringOutput(l))
-
-        if (flag in Mapped_within_the_insert_size_and_in_correct_orientation and toto == "co"):
-            with open("CorrectOrientation.fasta", "a+") as Output3:
-                Output3.write(toStringOutput(l))
-
-        if (flag in Mapped_within_the_insert_size_but_in_wrong_orientation and toto == "wo"):
-            with open("WrongOrientation.fasta", "a+") as Output4:
-               Output4.write(toStringOutput(l))
-
-        if (flag in Mapped_uniquely_but_with_wrong_insert_size and toto == "wi"):
-            with open("WrongInsertSize.fasta", "a+") as Output5:
-                Output5.write(toStringOutput(l))
-
-        if (flag in test1 and toto == "test"):
-            with open("test.fasta", "a") as Output6:
-                Output6.write(toStringOutput(l))
-
-def computeSummary (fileName):
-    with open("summary_header.txt", "r") as F_Head, open("bin_Flag_table.txt", "r") as F_flag, open("Final_Cigar_table.txt", "r") as F_Cigar, open("Final_GC_table.txt", "r") as F_GC, open("summary.txt", "a+") as F_Sum :
+    with open("summary_header.txt", "r") as F_Head, open("bin_Flag_table.txt", "r") as F_flag, open("Final_Cigar_table.txt", "r") as F_Cigar, open("Final_GC_table.txt", "r") as F_GC, open("summary.txt", "a+") as F_Sum:
         F_Sum.write("==================================================================\n"+
-                    "  >  Summary "+fileName+"\n")
+                    "  >  Summary " + fileName + "\n")
         for line in F_Head :
             l = line.rstrip("\n")
             F_Sum.write(line)
@@ -682,9 +656,16 @@ def computeSummary (fileName):
             l = line.rstrip("\n")
             F_Sum.write(line)
 
-def outFile(fileName): 
-    """
-    Output file name
+def outFile(newname): 
+    """ Output file name
+
+    Parameters
+    ----------
+    None
+
+    Returns
+    -------
+    None
     """
 
     os.remove("summary_header.txt")
@@ -695,16 +676,43 @@ def outFile(fileName):
     #os.remove("Final_Flag_table.txt")
     os.remove("Final_Cigar_table.txt")
     os.remove("Final_GC_table.txt")
-    os.rename("summary.txt", fileName + "_summary.txt")
+    os.rename("summary.txt", newname + "_summary.txt")
+
+def summaryPrint():
+    """ Print the summary.txt in the terminal.
+
+    Parameters
+    ----------
+    None
+
+    Returns
+    -------
+    None
+    """
+
+    with open("summary.txt", "r") as summary_read:
+        for line in summary_read:
+            l = line.rstrip("\n")
+            print(l)
 
 #### Main function ####
 
 def main(argv):
-    """
-      Main function.
-      This function use the getopt module for the argument options. 
-      For option list and their command line, please watch the usage function for more 
-      information or README file (README.txt or README.md in github page.
+    """ Main function.
+
+    This function use the getopt module for the argument options. 
+    For option list and their command line, please watch the usage function for more 
+    information or README file (README.txt or README.md in github page.
+
+    Parameters
+    ----------
+    None
+
+    Returns
+    -------
+    None
+
+
     """
     short_options = "hi:o:f:"
     long_options = ["help", "input=", "output=", "fasta="]
@@ -721,6 +729,7 @@ def main(argv):
             if current_argument in ("-i", "--input"):
                 print("Check Sam format.")
                 fileName = checkSamFormat(current_value)
+                print(fileName)
                 
                 print("Read the file.")
                 resSamHeader = openSamHeader(current_value)
@@ -747,24 +756,19 @@ def main(argv):
 
                 print("Compute Summary")
                 computeSummary(fileName)
-
-            if current_argument in ("-o", "--output"):
-                print("Ouput the file.")
-                # voir pour options ?!!
-                #outFile(fileName)  mis en dernier car affichage et renommage summary plus bas
+                summaryPrint()
 
             if current_argument in ("-f", "--fasta"):
                 print("Compute the fasta file.")
                 fastaOutput(resSam, current_value) # for commons Flags
                 flagBin(resSam, current_value) # for Read Unmapped Only
 
+            if current_argument in ("-o", "--output"):
+                print("Ouput the file.")
+                # voir pour options ?!!
+                outFile(current_value) #  mis en dernier car affichage et renommage summary plus bas
 
         print("Analyse finished.")
-
-        with open ("summary.txt") as summary :
-            for line in summary :
-                l = line.rstrip("\n")
-                print (l)
                 
     except getopt.error as err:
         # Output error, and return with an error code
