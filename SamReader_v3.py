@@ -60,7 +60,7 @@ def usage():
     AUTHORS:
         Benoit ALIAGA (aliaga.benoit@gmail.com)
         Matthieu ANGLES (matthieu.angles@hotmail.fr)
-        
+
     MORE INFORMATIONS:
         https://github.com/wanaga3166/Mapping
     
@@ -81,7 +81,7 @@ def usage():
 
 def checkSamFormat(argv): 
     """
-      Check only two ligne for header and the first line of read
+      Check only two lines for header and the first line of read
     """
 
     # Check samFilename (= argv)
@@ -217,6 +217,7 @@ def parseSamLine(sam_line):
     -------
     None
     """
+
     cpt = 1 # Initialisation d'un compteur
     nbReads = 0
     globalGC = 0
@@ -257,6 +258,7 @@ def flagBinary(flag) :
     -------
     a list of integer.
     """
+
     flagB = bin(int(flag)) 
     flagB = flagB[2:] # Remove '0b' Example: '0b1001101' > '1001101'
     flagB = list(flagB) 
@@ -268,217 +270,156 @@ def flagBinary(flag) :
 
     return flagB
 
-def flagBin2(sam_line): # VOIR POUR ECRITURE DANS SUMMARY OU AUTRE UTILISATION
-    """Provides binary traduction of the flag extracted previously in the parseSamLine function.
-      
-    Fasta outputs options for Read Unmapped or others informations.
-
-    Parameters
-    ----------
-    sam_line (a list of )
-
-    Returns
-    -------
-    None
+def unmapped(sam_line):
     """
-    with open("bin_Flag_table.txt", "w") as output_bin_flag:
-        
-        flag_counts = {"TotalReads":0}
-        ReadName1 = "Je suis le read1 et j'en suis fier"
-        
-        for l in sam_line:
-            flag_counts["TotalReads"] += 1
-            line = l.split("\t")
-            ReadName = str(line[0])
+        Analyse the reads which are unmapped (not paired).
+    """
+    
+    unmapped_count = 0
+    
+    with open ("only_unmapped.fasta", "a+") as unmapped_fasta, open("summary_unmapped.txt", "w") as summary_file:
+        for line in sam_line:
+            col_line = line.split("\t")
+            flag = flagBinary(col_line[1])
 
-            if ReadName != ReadName1 :
-                ReadName1 = ReadName    # il est le read1
-                lineRead1 = l
-                #print (lineRead1)
-            else :                      # il est le read2
-                lineRead2 = l  
-                #print (lineRead2)
+            if int(flag[-3]) == 1:
+                unmapped_count += 1
+                unmapped_fasta.write(toStringOutput(line))
 
-                line1 = lineRead1.split("\t")
-                line2 = lineRead2.split("\t")
-                flagB1 = flagBinary(line1[1])
-                flagB2 = flagBinary(line2[1])
-                mapq1 = int(line1[4])
-                mapq2 = int(line2[4])
-                
-                # Voir si utile :
-                #cigar1 = readCigar(line1[5])
-                #cigar2 = readCigar(line2[5])
-                #GC1 = percentGC(line1[9])
-                #GC2 = percentGC(line2[9])
+        summary_file.write("================== FLAG INFORMATIONS ===================" + "\n")
+        summary_file.write("\n")
+        summary_file.write("Total unmapped reads: " + str(unmapped_count) + "\n") 
 
+        return unmapped_count
 
-                # Cas où les deux reads sont mappés :
-                if int(flagB1[-2]) == 1 and int(flagB2[-2]) == 1 :
-                    if mapq1 >= 60 and mapq2 >= 60 : # Qualité >+ 60 (ajouter condition cigar aussi ?)
-                        # Comptage reads mappés bonnes qualités +2
-                        if "Reads_correctement_mappés_et_bonne_qualite" not in flag_counts.keys():
-                            flag_counts["Reads_correctement_mappés_et_bonne_qualite"] = 2
-                        else:
-                            flag_counts["Reads_correctement_mappés_et_bonne_qualite"] += 2
-                        # Comptage combanaisons mappés mauvaises qualités +1 
-                        if "Paires_mappés" not in flag_counts.keys():
-                            flag_counts["Reads_correctement_mappés_et_bonne_qualite"] = 1
-                        else:
-                            flag_counts["Reads_correctement_mappés_et_bonne_qualite"] += 1
-                    else:
-                        # Comptage reads mappés mauvaises qualités +2
-                        if "Reads_correctement_mappés_mais_mauvaise_qualite" not in flag_counts.keys():
-                            flag_counts["Reads_correctement_mappés_mais_mauvaise_qualite"] = 2
-                        else:
-                            flag_counts["Reads_correctement_mappés_mais_mauvaise_qualite"] += 2
-                        # Comptage combinaisons mauvaises qualités +1
-                        if "Paires_mappés" not in flag_counts.keys():
-                            flag_counts["Reads_correctement_mappés_mais_mauvaise_qualite"] = 1
-                        else:
-                            flag_counts["Reads_correctement_mappés_mais_mauvaise_qualite"] += 1
+def partiallyMapped(sam_line):
+    """
+        Analyse the read which are only partially mapped.
+    """
 
-                # Cas où les deux reads ne sont pas mappés :
-                if int(flagB1[-3]) == 1 and int(flagB2[-3]) == 1 :
-                        # Comptage reads non-mappés +2
-                        if "Reads_non_mappés" not in flag_counts.keys():
-                            flag_counts["Reads_non_mappés"] = 2
-                        else:
-                            flag_counts["Reads_non_mappés"] += 2
-                        # Comptage combainaison non-mappés +1
-                        if "Paires_non_mappés" not in flag_counts.keys():
-                            flag_counts["Paires_non_mappés"] = 1
-                        else:
-                            flag_counts["Paires_non_mappés"] += 1
+    partially_mapped_count = 0
 
-                # Cas où le read1 est mappé et le read2 est non-mappé :
-                if int(flagB1[-2]) == 1 and int(flagB2[-3]) == 1 :
-                    # Comptage reads non-mappés +1
-                    if "Reads_non_mappés" not in flag_counts.keys():
-                        flag_counts["Reads_non_mappés"] = 1
-                    else:
-                        flag_counts["Reads_non_mappés"] += 1
+    with open ("only_partially_mapped.fasta", "a+") as partillay_mapped_fasta, open("summary_partially_mapped.txt", "w") as summary_file:
+        for line in sam_line:
+            col_line = line.split("\t")
+            flag = flagBinary(col_line[1])
 
-                    if mapq1 >= 60 : # Qualité >+ 60 (ajouter condition cigar aussi ?)
-                        # Comptage reads mappés bonnes qualités +1                      
-                        if "Reads_correctement_mappés_et_bonne_qualite" not in flag_counts.keys():
-                            flag_counts["Reads_correctement_mappés_et_bonne_qualite"] = 1
-                        else:
-                            flag_counts["Reads_correctement_mappés_et_bonne_qualite"] += 1     
-                        # Comptage combinaison Un Read mappés bonne qualité et Autre Read non mappés +1
-                        if "UnRead_correctement_mappés_et_bonne_qualite_et_AutreRead_non_mappés" not in flag_counts.keys():
-                            flag_counts["UnRead_correctement_mappés_et_bonne_qualite_et_AutreRead_non_mappés"] = 1
-                        else:
-                            flag_counts["UnRead_correctement_mappés_et_bonne_qualite_et_AutreRead_non_mappés"] += 1
-                    else:
-                        # Comptage reads mappés mauvaise qualités +1 
-                        if "Reads_correctement_mappés_mais_mauvaise_qualite" not in flag_counts.keys():
-                            flag_counts["Reads_correctement_mappés_mais_mauvaise_qualite"] = 1
-                        else:
-                            flag_counts["Reads_correctement_mappés_mais_mauvaise_qualite"] += 1
-                        # Comptage combinaison UnRead mappés mauvaise qualité et Autre Read non mappés +1
-                        if "UnRead_correctement_mappés_mais_mauvaise_qualite_et_AutreRead_non_mappés" not in flag_counts.keys():
-                            flag_counts["UnRead_correctement_mappés_mais_mauvaise_qualite_et_AutreRead_non_mappés"] = 1
-                        else:
-                            flag_counts["UnRead_correctement_mappés_mais_mauvaise_qualite_et_AutreRead_non_mappés"] += 1
+            if int(flag[-2]) == 1:
+                if col_line[5] != "100M":
+                    partially_mapped_count += 1
+                    partillay_mapped_fasta.write(toStringOutput(line))
 
-                # Cas où le read1 est non-mappé et le read2 est mappé :
-                if int(flagB1[-2]) == 1 and int(flagB2[-3]) == 1 :
-                    # Comptage reads non-mappés +1
-                    if "Reads_non_mappés" not in flag_counts.keys():
-                        flag_counts["Reads_non_mappés"] = 1
-                    else:
-                        flag_counts["Reads_non_mappés"] += 1
+        summary_file.write("Total partially mapped reads: " + str(partially_mapped_count) + "\n") 
+        return partially_mapped_count
 
-                    if mapq2 >= 60 : # Qualité >+ 60 (ajouter condition cigar aussi ?)
-                        # Comptage reads mappés bonnes qualités +1                      
-                        if "Reads_correctement_mappés_et_bonne_qualite" not in flag_counts.keys():
-                            flag_counts["Reads_correctement_mappés_et_bonne_qualite"] = 1
-                        else:
-                            flag_counts["Reads_correctement_mappés_et_bonne_qualite"] += 1     
-                        # Comptage combinaison Un Read mappés bonne qualité et Autre Read non mappés +1
-                        if "UnRead_correctement_mappés_et_bonne_qualite_et_AutreRead_non_mappés" not in flag_counts.keys():
-                            flag_counts["UnRead_correctement_mappés_et_bonne_qualite_et_AutreRead_non_mappés"] = 1
-                        else:
-                            flag_counts["UnRead_correctement_mappés_et_bonne_qualite_et_AutreRead_non_mappés"] += 1
-                    else:
-                        # Comptage reads mappés mauvaise qualités +1 
-                        if "Reads_correctement_mappés_mais_mauvaise_qualite" not in flag_counts.keys():
-                            flag_counts["Reads_correctement_mappés_mais_mauvaise_qualite"] = 1
-                        else:
-                            flag_counts["Reads_correctement_mappés_mais_mauvaise_qualite"] += 1
-                        # Comptage combinaison UnRead mappés mauvaise qualité et Autre Read non mappés +1
-                        if "UnRead_correctement_mappés_mais_mauvaise_qualite_et_AutreRead_non_mappés" not in flag_counts.keys():
-                            flag_counts["UnRead_correctement_mappés_mais_mauvaise_qualite_et_AutreRead_non_mappés"] = 1
-                        else:
-                            flag_counts["UnRead_correctement_mappés_mais_mauvaise_qualite_et_AutreRead_non_mappés"] += 1
+def pairedMapped1_Partial2(sam_line):
+    """
+        Analyze the paired read which are mapped for the first one and partially mapped for the second one.
+        A fasta file will be written at the end of the script.
+    """
 
-                # Cas où le read1 est mappé et le read2 est dans le mauvais sens :
-                if int(flagB1[-2]) == 1 and int(flagB2[-5]) == 1 :
-                    # Comptage reads mauvais sens +1
-                    if "Reads_mauvais_sens" not in flag_counts.keys():
-                        flag_counts["Reads_mauvais_sens"] = 1
-                    else:
-                        flag_counts["Reads_mauvais_sens"] += 1
+    pairedMapped1Partially2_count = 0
+    cpt = 1 # Initialisation d'un compteur
+    nameRead1 = ''    
 
-                    if mapq1 >= 60 : # Qualité >+ 60 (ajouter condition cigar aussi ?)
-                        # Comptage reads mappés bonnes qualités +1                      
-                        if "Reads_correctement_mappés_et_bonne_qualite" not in flag_counts.keys():
-                            flag_counts["Reads_correctement_mappés_et_bonne_qualite"] = 1
-                        else:
-                            flag_counts["Reads_correctement_mappés_et_bonne_qualite"] += 1     
-                        # Comptage combinaison Un Read mappés bonne qualité et Autre Read dans le mauvais sens +1
-                        if "UnRead_correctement_mappés_et_bonne_qualite_et_AutreRead_mauvais_sens" not in flag_counts.keys():
-                            flag_counts["UnRead_correctement_mappés_et_bonne_qualite_et_AutreRead_mauvais_sens"] = 1
-                        else:
-                            flag_counts["UnRead_correctement_mappés_et_bonne_qualite_et_AutreRead_mauvais_sens"] += 1
-                    else:
-                        # Comptage reads mappés mauvaise qualités +1 
-                        if "Reads_correctement_mappés_mais_mauvaise_qualite" not in flag_counts.keys():
-                            flag_counts["Reads_correctement_mappés_mais_mauvaise_qualite"] = 1
-                        else:
-                            flag_counts["Reads_correctement_mappés_mais_mauvaise_qualite"] += 1
-                        # Comptage combinaison UnRead mappés mauvaise qualité et Autre Read mauvais sens +1
-                        if "UnRead_correctement_mappés_mais_mauvaise_qualite_et_AutreRead_mauvais_sens" not in flag_counts.keys():
-                            flag_counts["UnRead_correctement_mappés_mais_mauvaise_qualite_et_AutreRead_mauvais_sens"] = 1
-                        else:
-                            flag_counts["UnRead_correctement_mappés_mais_mauvaise_qualite_et_AutreRead_mauvais_sens"] += 1
+    with open ("read1_mapped_read2_partially.fasta", "a+") as mapped1_partially2_fasta, open("summary_paired_mapped_partially.txt", "w") as summary_file:
 
-                # Cas où le read1 est dans le mauvais sens et le read2 est mappé :
-                if int(flagB1[-5]) == 1 and int(flagB2[-2]) == 1 :
-                    # Comptage reads mauvais sens +1
-                    if "Reads_mauvais_sens" not in flag_counts.keys():
-                        flag_counts["Reads_mauvais_sens"] = 1
-                    else:
-                        flag_counts["Reads_mauvais_sens"] += 1
+        # Option 1: the first read is correctly mapped and the second is partially mapped.
+        for line in sam_line:
+            col_line = line.split("\t") # Fractionnement de la line suivant \t
+            flag = flagBinary(col_line[1])
 
-                    if mapq2 >= 60 : # Qualité >+ 60 (ajouter condition cigar aussi ?)
-                        # Comptage reads mappés bonnes qualités +1                      
-                        if "Reads_correctement_mappés_et_bonne_qualite" not in flag_counts.keys():
-                            flag_counts["Reads_correctement_mappés_et_bonne_qualite"] = 1
-                        else:
-                            flag_counts["Reads_correctement_mappés_et_bonne_qualite"] += 1     
-                        # Comptage combinaison Un Read mappés bonne qualité et Autre Read dans le mauvais sens +1
-                        if "UnRead_correctement_mappés_et_bonne_qualite_et_AutreRead_mauvais_sens" not in flag_counts.keys():
-                            flag_counts["UnRead_correctement_mappés_et_bonne_qualite_et_AutreRead_mauvais_sens"] = 1
-                        else:
-                            flag_counts["UnRead_correctement_mappés_et_bonne_qualite_et_AutreRead_mauvais_sens"] += 1
-                    else:
-                        # Comptage reads mappés mauvaise qualités +1 
-                        if "Reads_correctement_mappés_mais_mauvaise_qualite" not in flag_counts.keys():
-                            flag_counts["Reads_correctement_mappés_mais_mauvaise_qualite"] = 1
-                        else:
-                            flag_counts["Reads_correctement_mappés_mais_mauvaise_qualite"] += 1
-                        # Comptage combinaison UnRead mappés mauvaise qualité et Autre Read mauvais sens +1
-                        if "UnRead_correctement_mappés_mais_mauvaise_qualite_et_AutreRead_mauvais_sens" not in flag_counts.keys():
-                            flag_counts["UnRead_correctement_mappés_mais_mauvaise_qualite_et_AutreRead_mauvais_sens"] = 1
-                        else:
-                            flag_counts["UnRead_correctement_mappés_mais_mauvaise_qualite_et_AutreRead_mauvais_sens"] += 1
+            if cpt == 1:
+                if int(flag[-2]) == 1:
+                    if col_line[5] != '100M':
+                        nameRead1 = col_line[0]
+                        mapped1_partially2_fasta.write(toStringOutput(line))
+                cpt += 1
+            elif cpt == 2:
+                #print(cpt)
+                if col_line[0] == nameRead1:
+                    if col_line[5] == '100M':
+                        mapped1_partially2_fasta.write(toStringOutput(line))
+                        pairedMapped1Partially2_count += 1
+                nameRead1 = ''
+                cpt = 1
 
-        #return flag_counts
-        for k in flag_counts :
-            output_bin_flag.write(k+" : "+str(flag_counts[k])+"\n")
+        # Option 2: the first read is partially mapped and the second read is correctly mapped.
+        for line in sam_line:
+            col_line = line.split("\t") # Fractionnement de la line suivant \t
+            flag = flagBinary(col_line[1])
 
+            if cpt == 1:
+                if int(flag[-2]) == 1:
+                    if col_line[5] == '100M':
+                        nameRead1 = col_line[0]
+                        Read1 = line
+                cpt +=1
+            elif cpt == 2:
+                #print("2")
+                nameRead2 = col_line[0]
+                #print(nameRead2)
+                if nameRead2 == nameRead1:
+                    #print("It's the same !")
+                    if col_line[5] != '100M':
+                        pairedMapped1Partially2_count += 1
+                        Read2 = line
+                        mapped1_partially2_fasta.write(toStringOutput(Read1))
+                        mapped1_partially2_fasta.write(toStringOutput(Read2))
+                nameRead1 = ''
+                nameRead2 = ''
+                cpt = 1
+                Read1 = ''
+                Read2 = ''
+
+        summary_file.write("Total mapped reads and partially mapped reads (paired): " + str(pairedMapped1Partially2_count) + "\n")          
+    return pairedMapped1Partially2_count
+
+def mapped1_unmapped2(sam_line):
+    """
+        Analyze the paired read which are mapped for the first one and unmapped for the second one.
+        A fasta file will be written at the end of the script.
+    """
+
+    pairedMapped1Unmapped2_count = 0
+    cpt = 1 # Initialisation d'un compteur
+    nameRead1 = ''
+
+    with open ("read1_mapped_read2_unmapped.fasta", "a+") as mapped1_unmapped2_fasta: # , open("summary_paired_mapped_unmapped.txt", "w") as summary_file
+
+        # Option 1: the first read is correctly mapped and the second read is unmapped.
+        for line in sam_line:
+            col_line = line.split("\t") # Fractionnement de la line suivant \t
+            flag = flagBinary(col_line[1])
+
+            if cpt == 1:
+                if int(flag[-2]) == 1: # Correctly mapped
+                    nameRead1 = col_line[0]
+                    Read1 = line
+                    pairedMapped1Unmapped2_count +=1
+                    #print(nameRead1)
+                    #print(Read1)
+                cpt += 1
+            elif cpt == 2:
+                nameRead2 = col_line[0]
+                if nameRead2 == nameRead1:
+                    #print(nameRead2)
+                    #print("It's the same !")
+                    if int(flag[-3]) == 1:
+                        Read2 = line
+                        #print(Read2)
+                        pairedMapped1Unmapped2_count += 1
+                        mapped1_unmapped2_fasta.write(toStringOutput(Read1))
+                        mapped1_unmapped2_fasta.write(toStringOutput(Read2))               
+                nameRead1 = ''
+                nameRead2 = ''
+                cpt = 1
+                Read1 = ''
+                Read2 = ''
+
+        # Option 2: the first read is unmapped and the second read is correctly mapped.
+
+        #summary_file.write("Total mapped reads and unmapped reads (paired): " + str(pairedMapped1Unmapped2_count) + "\n")
 
 def countFlag():
     """
@@ -516,8 +457,6 @@ def perceFlag(): #total
         for line2 in output_sam_flag2:
             number2 = line2.rstrip("\n").split(";")
             perc = (int(number2[1]) * 100) / total
-            newline = ";".join([number2[0],number2[1],str(round(perc,4))])
-            #print(newline)
             FinalFlag.write(number2[0] + ";" + number2[1] + ";" + str(round(perc,4)) + "\n")
  
 def readCigar(cigar): # Make a directory with lists key, value
@@ -700,17 +639,28 @@ def computeSummary(fileName):
 
     """
 
-    with open("summary_header.txt", "r") as F_Head, open("bin_Flag_table.txt", "r") as F_flag, open("Final_Cigar_table.txt", "r") as F_Cigar, open("Final_GC_table.txt", "r") as F_GC, open("summary.txt", "a+") as F_Sum:
+    with open("summary_header.txt", "r") as F_Head, open("Final_Cigar_table.txt", "r") as F_Cigar, open("Final_GC_table.txt", "r") as F_GC, open("summary_unmapped.txt", "r") as F_UN, open("summary_partially_mapped.txt", "r") as F_PA, open("summary_paired_mapped_partially.txt", "r") as F_M1P2, open("summary.txt", "a+") as F_Sum:
         F_Sum.write("==================================================================\n"+
                     "  >  Summary " + fileName + "\n")
         for line in F_Head :
             l = line.rstrip("\n")
             F_Sum.write(line)
         F_Sum.write("\n")
-        F_Sum.write("======================= PARSE INFORMATIONS =======================\n")
-        for line in F_flag :
+        F_Sum.write("\n")
+        for line in F_UN:
+            l =line.rstrip("\n")
+            F_Sum.write(line)
+        for line in F_PA :
             l = line.rstrip("\n")
             F_Sum.write(line)
+        for line in F_M1P2:
+            l = line.rstrip("\n")
+            F_Sum.write(line)
+        F_Sum.write("\n")
+        F_Sum.write("======================= PARSE INFORMATIONS =======================\n")
+        #for line in F_flag :
+        #    l = line.rstrip("\n")
+        #    F_Sum.write(line)
         F_Sum.write("\n")    
         for line in F_Cigar :
             l = line.rstrip("\n")
@@ -737,9 +687,12 @@ def outFile(newname):
     os.remove("count_flag_table.txt")
     os.remove("outpuTable_cigar.txt")
     os.remove("outpuTable_GC_percent.txt")
-    #os.remove("Final_Flag_table.txt")
     os.remove("Final_Cigar_table.txt")
     os.remove("Final_GC_table.txt")
+    os.remove("summary_unmapped.txt")
+    os.remove("summary_partially_mapped.txt")
+    os.remove("summary_paired_mapped_partially.txt")
+    os.rename("Final_Flag_table.txt", newname + "_final_Flag_table.txt")
     os.rename("summary.txt", newname + "_summary.txt")
 
 def summaryPrint():
@@ -801,7 +754,19 @@ def main(argv):
                 print("Parsing.")
                 parseSamLine(resSam)
                 #parseCigar(resSam)
-                flagBin2(resSam)
+                #flagBin2(resSam)
+
+                print("Analyze the only the unmapped reads.")
+                unmapped(resSam)
+
+                print("Analyze the only the partially mapped reads.")
+                partiallyMapped(resSam)
+
+                print("Analyze the reads which are mapped in one read and partially mapped in the other read.")
+                pairedMapped1_Partial2(resSam)
+
+                #print("Analyze the reads which are mapped in one read and unmapped in the other read.")
+                #mapped1_unmapped2(resSam)
 
                 print("Count the number of read for each flag combinations.")
                 countFlag()
@@ -831,7 +796,7 @@ def main(argv):
                 # voir pour options ?!!
                 outFile(current_value) #  mis en dernier car affichage et renommage summary plus bas
 
-        print("Analyse finished.")
+        print("Analyze finished.")
                 
     except getopt.error as err:
         # Output error, and return with an error code
