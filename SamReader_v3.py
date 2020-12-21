@@ -732,7 +732,7 @@ def main(argv):
 
     """
     short_options = "hi:o:f:"
-    long_options = ["help", "input=", "output=", "fasta="]
+    long_options = ["help", "input=", "output="]
     
     try:
         # Parsing argument
