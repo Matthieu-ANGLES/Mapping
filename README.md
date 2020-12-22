@@ -1,10 +1,6 @@
 # Mapping Project
 ## Projet mapping HMIN113 BCD
 
-## How to use SamReader.py ?
-
-## More information:
-
 NAME:
 
     SamReader
