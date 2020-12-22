@@ -381,11 +381,11 @@ def mapped1_unmapped2(sam_line):
         A fasta file will be written at the end of the script.
     """
 
-    pairedMapped1Unmapped2_count = 0
-    cpt = 1 # Initialisation d'un compteur
+    pairedmapped1Unmapped2_count = 0
+    cpt = 1 
     nameRead1 = ''
 
-    with open ("read1_mapped_read2_unmapped.fasta", "a+") as mapped1_unmapped2_fasta: # , open("summary_paired_mapped_unmapped.txt", "w") as summary_file
+    with open ("read1_mapped_read2_unmapped.fasta", "a+") as mapped1_unmapped2_fasta, open("summary_mapped1_unmmaped2.txt", "a+") as summary_file:
 
         # Option 1: the first read is correctly mapped and the second read is unmapped.
         for line in sam_line:
@@ -393,33 +393,89 @@ def mapped1_unmapped2(sam_line):
             flag = flagBinary(col_line[1])
 
             if cpt == 1:
-                if int(flag[-2]) == 1: # Correctly mapped
+                if (int(flag[-3]) == 1) and not (int(flag[-4]) == 1) : # unmapped
                     nameRead1 = col_line[0]
                     Read1 = line
-                    pairedMapped1Unmapped2_count +=1
-                    #print(nameRead1)
-                    #print(Read1)
                 cpt += 1
             elif cpt == 2:
                 nameRead2 = col_line[0]
-                if nameRead2 == nameRead1:
-                    #print(nameRead2)
-                    #print("It's the same !")
-                    if int(flag[-3]) == 1:
-                        Read2 = line
-                        #print(Read2)
-                        pairedMapped1Unmapped2_count += 1
-                        mapped1_unmapped2_fasta.write(toStringOutput(Read1))
-                        mapped1_unmapped2_fasta.write(toStringOutput(Read2))               
-                nameRead1 = ''
-                nameRead2 = ''
+                if nameRead1 == nameRead2:
+                    Read2 = line
+                    pairedmapped1Unmapped2_count += 1
+                    mapped1_unmapped2_fasta.write(toStringOutput(Read1))
+                    mapped1_unmapped2_fasta.write(toStringOutput(Read2))
                 cpt = 1
                 Read1 = ''
                 Read2 = ''
 
         # Option 2: the first read is unmapped and the second read is correctly mapped.
+        for line in sam_line:
+            col_line = line.split("\t")
+            flag = flagBinary(col_line[1])
 
-        #summary_file.write("Total mapped reads and unmapped reads (paired): " + str(pairedMapped1Unmapped2_count) + "\n")
+            if cpt == 1:
+                nameRead1 = col_line[0]
+                Read1 = line
+                if (int(flag[-3]) == 0) and (int(flag[-4]) == 1): #
+                    cpt += 1
+            elif cpt == 2:
+                nameRead2 = col_line[0]
+                Read2 = line
+                if nameRead1 == nameRead2:   
+                    if (int(flag[-3]) == 1) and (int(flag[-4]) == 0):
+                        Read2 = line
+                        pairedmapped1Unmapped2_count += 1
+                        mapped1_unmapped2_fasta.write(toStringOutput(Read1))
+                        mapped1_unmapped2_fasta.write(toStringOutput(Read2))
+                cpt = 1
+
+        summary_file.write("One read is mapped, the other one is not: {0} (paired) {1} (not paired) \n".format(pairedmapped1Unmapped2_count, (pairedmapped1Unmapped2_count * 2)))
+    return pairedmapped1Unmapped2_count
+
+def pairedunmapped(sam_line):
+    """ Compute the all the paired reads which are unmapped.
+    
+    Parameters
+    ----------
+    A line (list) from a sam file (samtools) previous parsed with  
+
+    Returns
+    -------
+    None
+        
+    """
+
+    pairedUnmapped1Unmapped2_count = 0
+    cpt = 1 
+    nameRead1 = ''
+
+    with open("read1_unmapped_read2_unmapped.fasta", "a+") as unmapped1_unmapped2_fasta, open("Summary_paired_unmapped.txt", "a+") as summary_file:
+
+        # The first read is unmapped and the second read is unmapped.
+        for line in sam_line:
+            col_line = line.split("\t") # Fractionnement de la line suivant \t
+            flag = flagBinary(col_line[1])
+
+            if cpt == 1:
+                if (int(flag[-3]) == 1) and (int(flag[-4]) == 1) : # unmapped
+                    nameRead1 = col_line[0]
+                    Read1 = line
+                    pairedUnmapped1Unmapped2_count += 1
+                cpt+= 1
+            elif cpt == 2:
+                nameRead2 = col_line[0]
+                if nameRead1 == nameRead2: # Control if the read name is the same than the previous line
+                    Read2 = line
+                    pairedUnmapped1Unmapped2_count += 1
+                    unmapped1_unmapped2_fasta.write(toStringOutput(Read1))
+                    unmapped1_unmapped2_fasta.write(toStringOutput(Read2))
+                cpt = 1
+                    
+        summary_file.write("The both reads are unmapped: {0} (reads) \n".format(pairedUnmapped1Unmapped2_count))
+        summary_file.write("\n")
+        summary_file.write("For more information about the flag combinations and their percentage present in this sam file, please check: Final_Flag_table.txt. Be carefull if you use the output option (-o), you changed the name of your file which is: newname_Final_Flag_table.txt.")
+    
+    return pairedUnmapped1Unmapped2_count
 
 def countFlag():
     """
@@ -639,7 +695,7 @@ def computeSummary(fileName):
 
     """
 
-    with open("summary_header.txt", "r") as F_Head, open("Final_Cigar_table.txt", "r") as F_Cigar, open("Final_GC_table.txt", "r") as F_GC, open("summary_unmapped.txt", "r") as F_UN, open("summary_partially_mapped.txt", "r") as F_PA, open("summary_paired_mapped_partially.txt", "r") as F_M1P2, open("summary.txt", "a+") as F_Sum:
+    with open("summary_header.txt", "r") as F_Head, open("Final_Cigar_table.txt", "r") as F_Cigar, open("Final_GC_table.txt", "r") as F_GC, open("summary_unmapped.txt", "r") as F_UN, open("summary_partially_mapped.txt", "r") as F_PA, open("summary_paired_mapped_partially.txt", "r") as F_M1P2, open("summary_mapped1_unmmaped2.txt", "r") as F_M1U2, open("Summary_paired_unmapped.txt", "r") as F_PU, open("summary.txt", "a+") as F_Sum:
         F_Sum.write("==================================================================\n"+
                     "  >  Summary " + fileName + "\n")
         for line in F_Head :
@@ -654,6 +710,12 @@ def computeSummary(fileName):
             l = line.rstrip("\n")
             F_Sum.write(line)
         for line in F_M1P2:
+            l = line.rstrip("\n")
+            F_Sum.write(line)
+        for line in F_M1U2:
+            l = line.rstrip("\n")
+            F_Sum.write(line)
+        for line in F_PU:
             l = line.rstrip("\n")
             F_Sum.write(line)
         F_Sum.write("\n")
@@ -765,8 +827,11 @@ def main(argv):
                 print("Analyze the reads which are mapped in one read and partially mapped in the other read.")
                 pairedMapped1_Partial2(resSam)
 
-                #print("Analyze the reads which are mapped in one read and unmapped in the other read.")
-                #mapped1_unmapped2(resSam)
+                print("Analyze the reads which are mapped in one read and unmapped in the other read.")
+                mapped1_unmapped2(resSam)
+
+                print("Analyze the reads which are paired and unmapped.")
+                pairedunmapped(resSam)
 
                 print("Count the number of read for each flag combinations.")
                 countFlag()
