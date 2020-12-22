@@ -42,7 +42,7 @@ REQUIREMENT:
 
     Python3 is necessary to launch the programm. If you don't have Python 3, you can download here:  https://www.python.org/downloads/
 
-    This software work with Linux. We are not sure this programm works with windows.
+    This software works with Linux. We are not sure this programm works with windows.
 
 INSTALLATION AND LAUNCH THE SOFTWARE:
 
