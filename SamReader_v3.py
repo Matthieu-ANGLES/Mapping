@@ -542,7 +542,7 @@ def perceFlag(): #total
     total = 0
     with open("count_flag_table.txt", "r") as output_sam_flag1 :
         for line in output_sam_flag1:
-            number = line.rstrip("\n").split(";")
+            number = line.rstrip("\n").split(";") # rstrip will remove the line break and the semicolon.
             numberi = int(number[1])
             total = numberi + total
     
@@ -564,14 +564,14 @@ def readCigar(cigar): # Make a directory with lists key, value
     value=[]    # arg int in value list
     val=""
 
-    for i in range(0,len(ext)) :
-        if (ext[i] == 'M' or ext[i] == 'I' or ext[i] == 'D' or ext[i] == 'S' or ext[i] == 'H' 
+    for i in range(0,len(ext)): # For each numeric values or alpha numeric
+        if (ext[i] == 'M' or ext[i] == 'I' or ext[i] == 'D' or ext[i] == 'S' or ext[i] == 'H'  # If it's one of these letters  => key list and add into the values list the concatenated values.
                         or ext[i] == "N" or ext[i] == 'P'or ext[i] == 'X'or ext[i] == '=') :
             key.append(ext[i])
             value.append(val)
             val = ""
         else :
-            val = "" + val + ext[i]
+            val = "" + val + ext[i]  # Else concatenate in order of arrival
     
     dico = {}
     n = 0
