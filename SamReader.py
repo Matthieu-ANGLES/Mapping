@@ -437,7 +437,7 @@ def pairedunmapped(sam_line):
                     
         summary_file.write("The both reads are unmapped: {0} (reads) \n".format(pairedUnmapped1Unmapped2_count))
         summary_file.write("\n")
-        summary_file.write("For more information about the flag combinations and their percentage present in this sam file, please check: test_final_flag_table.txt. Be carefull if you use the output option (-o), you changed the name of your file which is: newname_test_final_flag_table.txt.")
+        summary_file.write("For more information about the flag combinations and their percentage present in this sam file, please check: Final_Flag_table.txt. Be carefull if you use the output option (-o), you changed the name of your file which is: newname_Final_Flag_table.txt.")
     
     return pairedUnmapped1Unmapped2_count
 
@@ -633,7 +633,7 @@ def outFile(newname):
     os.remove("parse_flag_table.txt")
     os.remove("count_flag_table.txt")
     #os.remove()
-    os.rename("Final_Flag_table.txt", newname + "_final_flag_table.txt")
+    os.rename("Final_Flag_table.txt", newname + "_Final_Flag_table.txt")
     os.rename("Summary.txt", newname + "_summary.txt")
             
 #### Main function ####
