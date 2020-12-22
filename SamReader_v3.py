@@ -51,7 +51,7 @@ def usage():
         python SamReader.py -h # Launch the help.
         python SamReader.py -i <file> # Launch SamReader to analyse a samtools file (.sam).
         python SamReader.py -i <file> -o <name>
-        python SamReader.py -i <file> -f <option> # explain
+        python SamReader.py -i <file> -f <option>
 
     TROUBLESHOOTINGS:
         If you encounter one or several malfunctions when you execute this software, 
@@ -80,8 +80,15 @@ def usage():
     sys.exit(-1)
 
 def checkSamFormat(argv): 
-    """
-      Check only two lines for header and the first line of read
+    """ Check only the two lines for header and the first line of read.
+
+    Parameters
+    ----------
+    samtools file (.sam) as argv.
+
+    Returns
+    -------
+    The name of the file (string).
     """
 
     # Check samFilename (= argv)
@@ -126,8 +133,15 @@ def checkSamFormat(argv):
     return fileName
 
 def openSamHeader(argv):
-    """
-      Extract header from a sam file. 
+    """ Extract header from a sam file.
+
+    Parameters
+    ----------
+    samtools file (.sam) as argv.
+
+    Returns
+    -------
+    A list of line from a sam file. 
     """
 
     sam_header = []
@@ -211,7 +225,7 @@ def parseSamLine(sam_line):
 
     Parameters
     ----------
-    sam_line (a list of )
+    sam_line (a list of ) 
 
     Returns
     -------
@@ -256,23 +270,31 @@ def flagBinary(flag) :
 
     Returns
     -------
-    a list of integer.
+    A list of integer (0 or 1) for each flag.
     """
 
-    flagB = bin(int(flag)) 
+    flagB = bin(int(flag)) # We use the builtin bin() which transform the integer into a binary.
     flagB = flagB[2:] # Remove '0b' Example: '0b1001101' > '1001101'
     flagB = list(flagB) 
 
-    if len(flagB) < 12: # Size adjustement to 12 (normalized size)
-        add = 12 - len(flagB) 
+    if len(flagB) < 12: # Size adjustement to 12 (maximal flag size)
+        add = 12 - len(flagB) # We compute the difference between the maximal flag size (12) and the length of the binary flag.
         for t in range(add):
-            flagB.insert(0,'0')
+            flagB.insert(0,'0') # We insert 0 to complete until the maximal flag size.
 
     return flagB
 
 def unmapped(sam_line):
-    """
-        Analyse the reads which are unmapped (not paired).
+    """ Analyze the reads which are unmapped (not paired).
+    
+    Parameters
+    ----------
+    A list which contains the lines extracted previously with the function openSam.
+
+    Returns
+    -------
+    The number of unmapped reads (integer).
+    This function writes a fasta file which contains the whole unmapped reads (Read 1 or Read 2). (only_unmapped.fasta) 
     """
     
     unmapped_count = 0
@@ -293,8 +315,16 @@ def unmapped(sam_line):
         return unmapped_count
 
 def partiallyMapped(sam_line):
-    """
-        Analyse the read which are only partially mapped.
+    """ Analyze the read which are only partially mapped.
+
+    Parameters
+    ----------
+    A list which contains the lines extracted previously with the function openSam.
+
+    Returns
+    -------
+    The number of partially mapped reads which are not paired. (integer)
+    This function writes a fasta file which contains the whole partially mapped reads (Read 1 or Read 2). (only_partially_mapped.fasta) 
     """
 
     partially_mapped_count = 0
@@ -302,9 +332,9 @@ def partiallyMapped(sam_line):
     with open ("only_partially_mapped.fasta", "a+") as partillay_mapped_fasta, open("summary_partially_mapped.txt", "w") as summary_file:
         for line in sam_line:
             col_line = line.split("\t")
-            flag = flagBinary(col_line[1])
+            flag = flagBinary(col_line[1]) # We compute the same 
 
-            if int(flag[-2]) == 1:
+            if int(flag[-2]) == 1: 
                 if col_line[5] != "100M":
                     partially_mapped_count += 1
                     partillay_mapped_fasta.write(toStringOutput(line))
@@ -313,9 +343,18 @@ def partiallyMapped(sam_line):
         return partially_mapped_count
 
 def pairedMapped1_Partial2(sam_line):
-    """
-        Analyze the paired read which are mapped for the first one and partially mapped for the second one.
-        A fasta file will be written at the end of the script.
+    """ Analyze the paired read which are mapped for the first one and partially mapped for the second one.
+        
+
+    Parameters
+    ----------
+    A list which contains the lines extracted previously with the function openSam.
+
+    Returns
+    -------
+    The number of paired mapped reads (Read 1 or Read 2) and partially mapped reads (Read 1 or Read 2). (integer)
+    This function writes a fasta file which contains the whole paired mapped reads (Read 1 or Read 2) and the partially 
+    mapped reads (Read 1 or Read 2). (read1_mapped_read2_partially.fasta)    
     """
 
     pairedMapped1Partially2_count = 0
@@ -453,11 +492,11 @@ def pairedunmapped(sam_line):
 
         # The first read is unmapped and the second read is unmapped.
         for line in sam_line:
-            col_line = line.split("\t") # Fractionnement de la line suivant \t
+            col_line = line.split("\t") # Divide the line into several column (\t).
             flag = flagBinary(col_line[1])
 
             if cpt == 1:
-                if (int(flag[-3]) == 1) and (int(flag[-4]) == 1) : # unmapped
+                if (int(flag[-3]) == 1) and (int(flag[-4]) == 1) : # We count the read which are unmapped and where their mate are unmapped too.
                     nameRead1 = col_line[0]
                     Read1 = line
                     pairedUnmapped1Unmapped2_count += 1
@@ -467,8 +506,8 @@ def pairedunmapped(sam_line):
                 if nameRead1 == nameRead2: # Control if the read name is the same than the previous line
                     Read2 = line
                     pairedUnmapped1Unmapped2_count += 1
-                    unmapped1_unmapped2_fasta.write(toStringOutput(Read1))
-                    unmapped1_unmapped2_fasta.write(toStringOutput(Read2))
+                    unmapped1_unmapped2_fasta.write(toStringOutput(Read1)) # Write the fasta file
+                    unmapped1_unmapped2_fasta.write(toStringOutput(Read2)) # Write the fasta file
                 cpt = 1
                     
         summary_file.write("The both reads are unmapped: {0} (reads) \n".format(pairedUnmapped1Unmapped2_count))
@@ -485,13 +524,12 @@ def countFlag():
         dico = {}
         for line in table_flag:
             flag = line.rstrip("\n").rsplit(";")
-            inter = flag[1] + "-" + flag[2]
-            #inter = flag[1] + "-" + flag[3]
-            if inter not in dico.keys():
-                dico[inter] = 1
+            inter = flag[1] + "-" + flag[2] # Create a combination of the read 1 flag and the read 2 flag (if they are paired, if not, this software doesn't work!). 
+            if inter not in dico.keys(): # If this flag combination are not present in the key dictionnary (dico), we create a new key in dico.
+                dico[inter] = 1 
             else:
                 dico[inter] += 1
-            #print(dico)
+
         for key in dico.keys():
             output_flag.write(key + ";" + str(dico[key]) + "\n")
 
@@ -611,6 +649,7 @@ def percentGC(seq):
     a float
     
     """
+
     countGC = 0
     countAT = 0
     # Count nucleotides :
@@ -635,6 +674,7 @@ def countGC():
     -------
     Nonce
     """
+
     with open("outpuTable_GC_percent.txt", "r") as table_GCpercent, open("Final_GC_table.txt", "w") as FinalGC:
         dico = {"70-100":0,"60-70":0,"50-60":0,"40-50":0,"30-40":0,"0-30":0}
         nbReads = 0
@@ -720,9 +760,6 @@ def computeSummary(fileName):
             F_Sum.write(line)
         F_Sum.write("\n")
         F_Sum.write("======================= PARSE INFORMATIONS =======================\n")
-        #for line in F_flag :
-        #    l = line.rstrip("\n")
-        #    F_Sum.write(line)
         F_Sum.write("\n")    
         for line in F_Cigar :
             l = line.rstrip("\n")
@@ -737,7 +774,7 @@ def outFile(newname):
 
     Parameters
     ----------
-    None
+    newname choosen by the software user. This variable is returned by the output option (-o or --output).  
 
     Returns
     -------
@@ -790,9 +827,8 @@ def main(argv):
     Returns
     -------
     None
-
-
     """
+
     short_options = "hi:o:f:"
     long_options = ["help", "input=", "output="]
     
@@ -815,8 +851,6 @@ def main(argv):
 
                 print("Parsing.")
                 parseSamLine(resSam)
-                #parseCigar(resSam)
-                #flagBin2(resSam)
 
                 print("Analyze the only the unmapped reads.")
                 unmapped(resSam)
@@ -837,8 +871,6 @@ def main(argv):
                 countFlag()
 
                 print("Calculate the percentage for each flag combination.")
-                #numberReads = total()
-                #percFlag(numberReads)
                 perceFlag()
 
                 print("Calculate the global percentage mutation of cigars")
@@ -847,16 +879,15 @@ def main(argv):
                 print("Calculate the percentage of GC contain")
                 countGC()
 
-                print("Compute Summary")
+                print("Analyzes finished. \n")
                 computeSummary(fileName)
                 summaryPrint()
 
             if current_argument in ("-o", "--output"):
                 print("Ouput the file.")
-                # voir pour options ?!!
                 outFile(current_value) #  mis en dernier car affichage et renommage summary plus bas
 
-        print("Analyze finished.")
+
                 
     except getopt.error as err:
         # Output error, and return with an error code
