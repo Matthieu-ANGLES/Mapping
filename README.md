@@ -74,6 +74,7 @@ EXAMPLES:
     python3 SamReader.py --input <file> --output <name>  
 
 TROUBLESHOOTINGS:
+
     If you encounter one or several malfunctions when you execute this software, please contact us (see our e-mail addresses below).
 
 AUTHORS:
