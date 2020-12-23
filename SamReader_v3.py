@@ -769,12 +769,47 @@ def computeSummary(fileName):
             l = line.rstrip("\n")
             F_Sum.write(line)
 
-def outFile(newname): 
+def outFile(newname):
     """ Output file name
 
     Parameters
     ----------
     newname choosen by the software user. This variable is returned by the output option (-o or --output).  
+
+    Returns
+    -------
+    None
+    """
+   
+    os.remove("summary_header.txt")
+    os.remove("parse_flag_table.txt")
+    os.remove("count_flag_table.txt")
+    os.remove("outpuTable_cigar.txt")
+    os.remove("outpuTable_GC_percent.txt")
+    os.remove("Final_Cigar_table.txt")
+    os.remove("Final_GC_table.txt")
+    os.remove("summary_unmapped.txt")
+    os.remove("summary_partially_mapped.txt")
+    os.remove("summary_paired_mapped_partially.txt")
+    os.remove("summary_mapped1_unmmaped2.txt")
+    os.remove("Summary_paired_unmapped.txt")
+
+    os.rename("only_unmapped.fasta", newname + "_only_unmapped.fasta")
+    os.rename("only_partially_mapped.fasta", newname + "_only_partially_mapped.fasta")
+    os.rename("read1_mapped_read2_partially.fasta", newname + "_read1_mapped_read2_partially.fasta")
+    os.rename("read1_mapped_read2_unmapped.fasta", newname + "_read1_mapped_read2_unmapped.fasta")
+    os.rename("read1_unmapped_read2_unmapped.fasta", newname + "_read1_unmapped_read2_unmapped.fasta.fasta")
+    os.rename("Final_Flag_table.txt", newname + "_final_Flag_table.txt")
+    os.rename("summary.txt", newname + "_summary.txt")
+
+    return True
+
+def remove():
+    """ Erase all output
+
+    Parameters
+    ----------
+    None
 
     Returns
     -------
@@ -786,13 +821,21 @@ def outFile(newname):
     os.remove("count_flag_table.txt")
     os.remove("outpuTable_cigar.txt")
     os.remove("outpuTable_GC_percent.txt")
+    os.remove("Final_Flag_table.txt")
     os.remove("Final_Cigar_table.txt")
     os.remove("Final_GC_table.txt")
     os.remove("summary_unmapped.txt")
     os.remove("summary_partially_mapped.txt")
     os.remove("summary_paired_mapped_partially.txt")
-    os.rename("Final_Flag_table.txt", newname + "_final_Flag_table.txt")
-    os.rename("summary.txt", newname + "_summary.txt")
+    os.remove("summary_mapped1_unmmaped2.txt")
+    os.remove("Summary_paired_unmapped.txt")
+    os.remove("summary.txt")
+
+    os.remove("only_unmapped.fasta")
+    os.remove("only_partially_mapped.fasta")
+    os.remove("read1_mapped_read2_partially.fasta")
+    os.remove("read1_mapped_read2_unmapped.fasta")
+    os.remove("read1_unmapped_read2_unmapped.fasta")
 
 def summaryPrint():
     """ Print the summary.txt in the terminal.
@@ -817,21 +860,14 @@ def main(argv):
     """ Main function.
 
     This function use the getopt module for the argument options. 
-    For option list and their command line, please watch the usage function for more 
-    information or README file (README.txt or README.md in github page.
-
-    Parameters
-    ----------
-    None
-
-    Returns
-    -------
-    None
+    For option list and their command line, please read the usage function for more 
+    information or README file (README.txt or README.md in github page).
     """
 
     short_options = "hi:o:f:"
     long_options = ["help", "input=", "output="]
-    
+    rmv = False
+   
     try:
         # Parsing argument
         arguments, values = getopt.getopt(argv, short_options, long_options)
@@ -840,11 +876,11 @@ def main(argv):
         for current_argument, current_value in arguments:
             if current_argument in ("-h", "--help"):
                 usage()
-                
+               
             if current_argument in ("-i", "--input"):
                 print("Check Sam format.")
                 fileName = checkSamFormat(current_value)
-                
+               
                 print("Read the file.")
                 resSamHeader = openSamHeader(current_value)
                 resSam = openSam(current_value)
@@ -885,7 +921,12 @@ def main(argv):
 
             if current_argument in ("-o", "--output"):
                 print("Ouput the file.")
-                outFile(current_value) #  mis en dernier car affichage et renommage summary plus bas
+                rmv = outFile(current_value) #  mis en dernier car affichage et renommage summary plus bas
+           
+        if rmv:
+            pass
+        else:
+            remove()
 
 
                 
