@@ -40,7 +40,7 @@ def usage():
         12/21/2020
 
     FUNCTION:
-        SamReader is a parser program for samtools files (.sam).
+        SamReader is a parser program for samtools files (.sam). It analyze only Paired-End dataset. 
 
     OPTION LIST:
         -h or --help : help information
@@ -48,10 +48,12 @@ def usage():
         -o or --output: output name files
 
     EXAMPLES:
-        python SamReader.py -h # Launch the help.
-        python SamReader.py -i <file> # Launch SamReader to analyse a samtools file (.sam).
-        python SamReader.py -i <file> -o <name>
-        python SamReader.py -i <file> -f <option>
+        python3 SamReader.py -h # Launch the help.
+        python3 SamReader.py -i <file> # Launch SamReader to analyze a samtools file (.sam) and print the result in the terminal
+        python3 SamReader.py -i <file> -o <name> # If this option is present with a name, several files will be created (fasta files, table, summary) and print the result into the terminal.  
+        python3 SamReader.py --input <file>
+        python3 SamReader.py --help
+        python3 SamReader.py --input <file> --output <name>  
 
     TROUBLESHOOTINGS:
         If you encounter one or several malfunctions when you execute this software, 
