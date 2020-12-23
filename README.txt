@@ -8,7 +8,7 @@ VERSION:
 
 DESCRIPTION:
 
-    SamReader is a parser program for samtools files (extension: .sam).
+    SamReader is a parser program for samtools files (extension: .sam). It analyze only Paired-End dataset. 
 
     This software will return several files:
 
@@ -37,7 +37,7 @@ DESCRIPTION:
 
 REQUIREMENT:
 
-    Python3 is necessary to launch the programm. If you don't have Python 3, you can download here:  https://www.python.org/downloads/
+    Python3 is necessary to launch the programm. If you don't have Python 3, you can download here: https://www.python.org/downloads/
 
     This software works with Linux. We are not sure this programm works with windows.
 
@@ -64,8 +64,8 @@ OPTION LIST:
 EXAMPLES:
 
     python3 SamReader.py -h # Launch the help
-    python3 SamReader.py -i <file> # Launch SamReader to analyse a samtools file (.sam).
-    python3 SamReader.py -i <file> -o <name>
+    python3 SamReader.py -i <file> # Launch SamReader to analyze a samtools file (.sam) and print the result in the terminal
+    python3 SamReader.py -i <file> -o <name> # If this option is present with a name, several files will be created (fasta files, table, summary) and print the result into the terminal.  
     python3 SamReader.py --input <file>
     python3 SamReader.py --help
     python3 SamReader.py --input <file> --output <name>  
@@ -94,4 +94,3 @@ LICENCE:
     FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
      You should have received a copy of the GNU General Public License
     along with this program. If not, see <https://www.gnu.org/licenses/>.
-
